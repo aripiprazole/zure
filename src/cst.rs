@@ -52,20 +52,24 @@ pub enum Exp {
   Shift(Box<Exp>),
   Int(i64),
   Var(Ident),
-  BinOp(Box<Exp>, tokens::BinOp, Box<Exp>),
+  BinOp(Box<Exp>, tok::BinOp, Box<Exp>),
   Let(Defn, Box<Exp>, Box<Exp>),
+  Eval(Box<Exp>),
+  Type(Box<Exp>),
+  Lam(Box<Exp>, Box<Exp>),
+  Pi(Box<Exp>, Box<Exp>),
   Appl(Box<Exp>, Box<Exp>),
   Signature(Signature),
 
   /// SECTION: Literal expressions, that represents one-to-one with the source code relationship
-  Vec(tokens::Sep, Vec<Exp>),
-  Delim(tokens::Delim, Box<Exp>),
+  Vec(tok::Sep, Vec<Exp>),
+  Delim(tok::Delim, Box<Exp>),
   SrcPos(crate::span::SrcPos, Box<Exp>),
 }
 
 /// Tokens are the smallest unit of the language, they are the building blocks of the
 /// language.
-pub mod tokens {
+pub mod tok {
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum Sep {
     Comma,
