@@ -1,6 +1,8 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub use debruijin::*;
+pub use metas::*;
 pub use ValKind::*;
 
 /// A spine is a list of values that are applied to a function.
@@ -15,9 +17,6 @@ pub struct Env {
   pub lvl: Lvl,
   pub stack: Vec<Val>,
 }
-
-#[derive(Debug, Clone)]
-pub struct Hole {}
 
 /// It's a lazy function, it's a closure that contains the environment and the
 /// quoted value.
@@ -108,6 +107,66 @@ mod debruijin {
   impl std::ops::AddAssign<usize> for Idx {
     fn add_assign(&mut self, rhs: usize) {
       self.0 += rhs
+    }
+  }
+}
+
+/// Meta variables stuff, like holes and meta
+mod metas {
+  use super::*;
+
+  #[derive(Debug, Clone)]
+  pub enum Meta {
+    Empty(Lvl),
+    Filled(Val),
+  }
+
+  #[derive(Debug, Clone)]
+  pub struct Hole {
+    name: String,
+    value: Rc<RefCell<Meta>>,
+  }
+
+  impl Hole {
+    /// Creates a new empty hole with the given name and level.
+    ///
+    /// The level is the level of the context where the hole was created.
+    pub fn empty(name: String, lvl: Lvl) -> Self {
+      Self {
+        name,
+        value: Rc::new(RefCell::new(Meta::Empty(lvl))),
+      }
+    }
+
+    /// Creates a new filled hole with the given name and value.
+    pub fn new(name: String, value: Val) -> Self {
+      Self {
+        name,
+        value: Rc::new(RefCell::new(Meta::Filled(value))),
+      }
+    }
+
+    /// Borrows the name of the hole.
+    pub fn name(&self) -> &str {
+      &self.name
+    }
+
+    /// Takes and clones the value of the hole.
+    ///
+    /// NOTE: It's useful to avoid runtime borrow errors
+    pub fn value(&self) -> Meta {
+      self.value.borrow().clone()
+    }
+
+    /// Returns if the hole is empty.
+    pub fn is_empty(&self) -> bool {
+      matches!(&*self.value.borrow(), Meta::Empty(_))
+    }
+  }
+
+  impl PartialEq for Hole {
+    fn eq(&self, other: &Self) -> bool {
+      Rc::ptr_eq(&self.value, &other.value)
     }
   }
 }
