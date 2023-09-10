@@ -11,6 +11,7 @@ pub enum Term {
 
 #[derive(Debug, Clone)]
 pub enum Val {}
+
 /// The simple identifier, it's a name that can be used to reference a definition
 /// in the source code.
 ///
