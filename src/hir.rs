@@ -3,14 +3,11 @@
 #[derive(Debug, Clone)]
 pub enum Term {
   /// Type level representation, that doesn't need a type
-  TypeRepr(Val),
+  TypeRepr(crate::val::Val),
   /// A value that would be run in run-time, it's a value that can be used in the source code, and
   /// it does need a type
   Exp { value: Box<Exp>, type_repr: Box<Term> },
 }
-
-#[derive(Debug, Clone)]
-pub enum Val {}
 
 /// The simple identifier, it's a name that can be used to reference a definition
 /// in the source code.

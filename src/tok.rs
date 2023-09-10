@@ -37,7 +37,7 @@ pub enum EqlMode {
 
 /// The unit of lexing process that contains more semantic information, like location, token kind [`Token`],
 /// and the text that was parsed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Lexeme<'src> {
   pub text: &'src str,
   pub token: Token<'src>,
