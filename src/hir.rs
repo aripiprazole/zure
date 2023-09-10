@@ -90,7 +90,7 @@ pub enum Exp {
   Var(Ident),
   /// Binary operation, it's a binary operation that can be used within 2 expressions, and some
   /// kind of binary operations can be used in the source code.
-  BinOp(Term, crate::cst::tok::BinOp, Term),
+  BinOp(Term, crate::tok::BinOp, Term),
   /// Let-binding, they are used to define a definition in the source code. It's a way to define
   /// a definition in the source code with functional programming.
   Let(Defn, Term, Term),

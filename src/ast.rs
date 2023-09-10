@@ -79,7 +79,7 @@ pub enum Exp {
 
   /// Binary operation, it's a binary operation that can be used within 2 expressions, and some
   /// kind of binary operations can be used in the source code.
-  BinOp(Box<Exp>, crate::cst::tok::BinOp, Box<Exp>),
+  BinOp(Box<Exp>, crate::tok::BinOp, Box<Exp>),
 
   /// Let-binding, they are used to define a definition in the source code. It's a way to define
   /// a definition in the source code with functional programming.
