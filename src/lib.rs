@@ -10,6 +10,7 @@ pub mod ast;
 pub mod constr;
 pub mod cst;
 pub mod hir;
+pub mod nfe;
 pub mod span;
 pub mod tok;
 pub mod typer;
