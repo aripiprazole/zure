@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 /// The simple identifier, it's a name that can be used to reference a definition
 /// in the source code.
 ///
@@ -18,11 +20,20 @@ pub struct Defn {
 }
 
 /// Represents the implicitness of an application.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u8)]
 pub enum Icit {
   Expl,
   Impl,
+}
+
+impl Display for Icit {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Icit::Expl => write!(f, "explicit"),
+      Icit::Impl => write!(f, "implicit"),
+    }
+  }
 }
 
 /// Represents a signature in the source code, it's a type that can be used to type

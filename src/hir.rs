@@ -1,3 +1,5 @@
+use crate::ast::Icit;
+
 /// It does represent a term in the source code, it's a term that can be used to type check
 /// a definition.
 #[derive(Debug, Clone)]
@@ -26,14 +28,6 @@ pub struct Ident {
 #[repr(transparent)]
 pub struct Defn {
   pub name: Ident,
-}
-
-/// Represents the implicitness of an application.
-#[derive(Debug, Clone)]
-#[repr(u8)]
-pub enum Icit {
-  Expl,
-  Impl,
 }
 
 /// Represents a signature in the source code, it's a type that can be used to type

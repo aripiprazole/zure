@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 chumsky = { version = "1.0.0-alpha.4", features = ["label"] }
 fxhash = "0.2.1"
+miette = "5.10.0"
+thiserror = "1.0.48"
