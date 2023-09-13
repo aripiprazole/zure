@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use crate::src::{Module, ModuleId};
+use crate::src::File;
+use crate::src::ModuleId;
 
 /// This is the local implementation of the database. It does implement the cache
 /// and the incremental computing stuff.
@@ -13,9 +14,8 @@ pub struct LocalDb {
   /// stuff.
   storage: salsa::Storage<LocalDb>,
 
-  files: dashmap::DashMap<PathBuf, Module>,
-
-  pub modules: im::HashMap<PathBuf, ModuleId>,
+  pub(crate) files: dashmap::DashMap<PathBuf, File>,
+  pub modules: im::HashMap<String, ModuleId>,
 }
 
 impl salsa::Database for LocalDb {}

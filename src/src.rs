@@ -12,9 +12,14 @@ pub struct Module {
   pub imports: Vec<Import>,
 }
 
+/// The identifier of a module. It does contains the path of the module, and
+/// the name of the module.
 #[salsa::input]
 pub struct ModuleId {
+  #[return_ref]
   pub text: String,
+
+  #[return_ref]
   pub path: PathBuf,
 }
 

@@ -33,7 +33,7 @@ fn main() -> eyre::Result<()> {
     .map(parse_include)
     .collect::<eyre::Result<Vec<_>>>()?
     .into_iter()
-    .map(|(path, module)| (path.clone(), ModuleId::new(&db, module, path)))
+    .map(|(module_text, path_buf)| (module_text.clone(), ModuleId::new(&db, module_text, path_buf)))
     .collect::<im::HashMap<_, _>>();
 
   // TODO: validate integrity of files
@@ -43,13 +43,12 @@ fn main() -> eyre::Result<()> {
   Ok(())
 }
 
-
 /// Parses include instruction of include in the CLI, the format should be like
-/// 
+///
 /// ```bash
 /// zure -I <module>:<path>
 /// ```
-fn parse_include(include: String) -> eyre::Result<(PathBuf, String)> {
+fn parse_include(include: String) -> eyre::Result<(String, PathBuf)> {
   let mut split = include.split(':');
   let module = split
     .next()
@@ -58,5 +57,5 @@ fn parse_include(include: String) -> eyre::Result<(PathBuf, String)> {
     .next()
     .wrap_err_with(|| eyre!("Invalid include path: {}", include))?;
 
-  Ok((path.into(), module.to_string()))
+  Ok((module.to_string(), path.into()))
 }
