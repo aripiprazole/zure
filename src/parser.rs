@@ -108,7 +108,10 @@ mod parsing {
       .then(select! {
         Token { data: Symbol, text } => text
       })
-      .map(|((), text)| Import { path: text.clone() })
+      .map(|((), text)| Import {
+        path: text.clone(),
+        span: None,
+      })
       .labelled("open declaration");
 
     import.repeated().collect::<Vec<_>>()

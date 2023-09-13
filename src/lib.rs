@@ -11,7 +11,17 @@ use vfs::ModuleLoader;
 /// The local were the incremental components are found. It's used by the
 /// `salsa` crate to incremental computing.
 #[salsa::jar(db = ZureDb)]
-pub struct Jar(crate::src::Module, crate::src::ModuleId, crate::src::File, crate::parser::parse);
+pub struct Jar(
+  crate::src::Module,
+  crate::src::ModuleId,
+  crate::src::File,
+  crate::parser::parse,
+  crate::src::TopLevel,
+  crate::src::Term,
+  crate::src::FunctionId,
+  crate::src::Variant,
+  crate::src::Parameter,
+);
 
 /// The database trait were we find the incremental components, and
 /// functions to interact with the database.
