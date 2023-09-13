@@ -19,3 +19,7 @@ thiserror = "1.0.48"
 salsa-2022 = { git = "https://github.com/salsa-rs/salsa", version = "0.1.0" }
 log = "0.4.20"
 env_logger = "0.10.0"
+eyre = "0.6.8"
+dashmap = "5.5.3"
+im = "15.1.0"
+clap = { version = "4.2.4", features = ["derive"] }
