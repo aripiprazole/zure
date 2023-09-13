@@ -1,7 +1,13 @@
 [package]
 name = "zure"
-version = "0.1.0"
+description = "Incremental dependent type programming-language"
+version = "0.0.1"
 edition = "2021"
+authors = ["Gabrielle Guimarães de Oliveira"]
+documentation = "https://github.com/aripiprazole/zure"
+license = "MIT"
+keywords = ["incremental", "parsing", "zure"]
+categories = ["parsing", "compiler", "text-editors"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,3 +16,6 @@ chumsky = { version = "1.0.0-alpha.4", features = ["label"] }
 fxhash = "0.2.1"
 miette = "5.10.0"
 thiserror = "1.0.48"
+salsa-2022 = { git = "https://github.com/salsa-rs/salsa", version = "0.1.0" }
+log = "0.4.20"
+env_logger = "0.10.0"

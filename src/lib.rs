@@ -6,14 +6,21 @@
 //!
 //! The configurations that are applied to CLI are done by the `main.rs` binary crate.
 
-pub mod ast;
-pub mod constr;
-pub mod cst;
-pub mod hir;
-pub mod nfe;
-pub mod span;
-pub mod tok;
-pub mod typer;
-pub mod unifier;
-pub mod val;
-pub mod ppr;
+/// The local were the incremental components are found. It's used by the
+/// `salsa` crate to incremental computing.
+#[salsa::jar(db = ZureDb)]
+pub struct Jar;
+
+/// The database trait were we find the incremental components, and
+/// functions to interact with the database.
+/// 
+/// It's implemented by the [`crate::db::LocalDb`] struct.
+pub trait ZureDb: salsa::DbWithJar<Jar> {}
+
+impl<Db: salsa::DbWithJar<Jar>> ZureDb for Db {}
+
+/// Re-export `salsa` from `salsa-2022`
+extern crate salsa_2022 as salsa;
+
+// SECTION: Module re-exports
+pub mod db;
