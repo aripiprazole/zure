@@ -27,5 +27,6 @@ extern crate salsa_2022 as salsa;
 // SECTION: Module re-exports
 pub mod db;
 pub mod parser;
+pub mod solver;
 pub mod src;
 pub mod vfs;

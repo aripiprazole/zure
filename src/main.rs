@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use eyre::eyre;
 use eyre::ContextCompat;
+use im::HashMap;
 use salsa_2022::DebugWithDb;
 use zure::parser::parse;
 use zure::src::ModuleId;
@@ -26,22 +27,14 @@ pub struct Cli {
 fn main() -> eyre::Result<()> {
   env_logger::try_init()?;
 
-  let cli = Cli::try_parse()?;
   let mut db = zure::db::LocalDb::default();
+  let cli = Cli::try_parse()?;
   let id = ModuleId::new(&db, cli.main.clone(), PathBuf::from(cli.main));
 
   // This parses the input commands and loads the modules, it's
   // used to map the modules to the files in the real file system,
   // so we can read the contents of the files.
-  db.modules = cli
-    .include
-    .unwrap_or_default()
-    .into_iter()
-    .map(parse_include)
-    .collect::<eyre::Result<Vec<_>>>()?
-    .into_iter()
-    .map(|(module_text, path_buf)| (module_text.clone(), ModuleId::new(&db, module_text, path_buf)))
-    .collect::<im::HashMap<_, _>>();
+  db.modules = parse_cli_include(&db, cli.include.unwrap_or_default())?;
 
   // Insert main module in the module tree so we can
   // access it later.
@@ -58,7 +51,20 @@ fn main() -> eyre::Result<()> {
   Ok(())
 }
 
-/// Parses include instruction of include in the CLI, the format should be like
+/// Includes the modules in the CLI.
+fn parse_cli_include(db: &dyn zure::ZureDb, includes: Vec<String>) -> eyre::Result<HashMap<String, ModuleId>> {
+  let mut graph = HashMap::new();
+  for include in includes {
+    let (text, path) = parse_include(include)?;
+    let id = ModuleId::new(db, text.clone(), path);
+
+    graph.insert(text, id);
+  }
+
+  Ok(graph)
+}
+
+/// Parses include instruction of include in the CLI, the format should be like:
 ///
 /// ```bash
 /// zure -I <module>:<path>
