@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use clap::Parser;
 use eyre::eyre;
 use eyre::ContextCompat;
+use salsa_2022::DebugWithDb;
+use zure::parser::parse;
 use zure::src::ModuleId;
+use zure::vfs::ModuleLoader;
 
 /// Zure's CLI. It's using the [`clap`] crate for parsing the commands,
 /// and it's using [`miette`] for error handling.
@@ -14,6 +17,9 @@ pub struct Cli {
   /// The input files.
   #[clap(short, long, required = false)]
   pub include: Option<Vec<String>>,
+
+  /// The main module.
+  pub main: String,
 }
 
 /// Zure's entrypoint.
@@ -22,6 +28,7 @@ fn main() -> eyre::Result<()> {
 
   let cli = Cli::try_parse()?;
   let mut db = zure::db::LocalDb::default();
+  let id = ModuleId::new(&db, cli.main.clone(), PathBuf::from(cli.main));
 
   // This parses the input commands and loads the modules, it's
   // used to map the modules to the files in the real file system,
@@ -35,6 +42,14 @@ fn main() -> eyre::Result<()> {
     .into_iter()
     .map(|(module_text, path_buf)| (module_text.clone(), ModuleId::new(&db, module_text, path_buf)))
     .collect::<im::HashMap<_, _>>();
+
+  // Insert main module in the module tree so we can
+  // access it later.
+  db.modules.insert("Main".to_string(), id);
+
+  // Parses the main module
+  let module = parse(&db, db.input("Main".to_string())?);
+  println!("{:#?}", module.debug_all(&db));
 
   // TODO: validate integrity of files
   //       if it's a file or folder

@@ -26,7 +26,7 @@ pub struct ModuleId {
 /// File is a source file. It does contains the source code of the file, and
 /// the path of the file, for incremental computing, and caching the module and
 /// build system.
-#[salsa::tracked]
+#[salsa::input]
 pub struct File {
   #[id]
   pub id: ModuleId,
