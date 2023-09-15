@@ -1,13 +1,15 @@
 use std::rc::Rc;
+use std::cell::{Cell, RefCell};
 
 pub use debruijin::*;
 pub use metas::*;
 pub use TypeKind::*;
 
-use crate::ast::Term;
+use crate::ast::{Expression, Term};
 use crate::src::Identifier;
 use crate::src::Implicitness;
 use crate::src::Span;
+use crate::ZureDb;
 
 /// Type constructors are the constructors of the type system. They are used to
 /// represent the types of the language.
@@ -33,7 +35,7 @@ pub struct Env {
 #[derive(Debug, Clone)]
 pub struct Closure {
   pub env: Env,
-  pub body: Box<Term>,
+  pub value: Term,
 }
 
 /// Value kind of the language. It's the base of the types, and it's the
@@ -219,4 +221,57 @@ mod metas {
       Rc::ptr_eq(&self.value, &other.value)
     }
   }
+}
+
+// SECTION: Type check
+#[derive(Debug, Clone)]
+pub struct Ctx<'db> {
+  pub db: &'db dyn ZureDb,
+  pub env: Env,
+  pub types: Vec<(String, Type)>,
+  pub position: RefCell<Span>,
+  pub unique: Cell<usize>
+}
+
+impl<'db> Ctx<'db> {
+  /// Creates a new environment with the given level and stack.
+  pub fn create_value(&self, value: Type) -> Ctx {
+    let mut ctx = self.clone();
+    ctx.env.lvl += 1;
+    ctx.env.stack.push(value);
+    ctx
+  }
+}
+
+/// Evaluates a value to get the type of the value. It does elaborate the
+/// expression to get an elaborated value.
+pub fn eval(ctx: &Ctx, value: Term) -> Type {
+  use Expression::*;
+
+  match value.data(ctx.db) {
+    Match(_) => todo!(),
+    Tuple(_) => todo!(),
+    Raise(_) => todo!(),
+    Text(_) => todo!(),
+    Appl(_) => todo!(),
+    Anno(_) => todo!(),
+    Int(_) => todo!(),
+    Var(_) => todo!(),
+    Fun(_) => todo!(),
+    Let(_) => todo!(),
+    Idx(_) => todo!(),
+    Universe => todo!(),
+    Pi(_) => todo!(),
+  }
+}
+
+/// Applies a closure with a value to get the result of the application.
+///
+/// # Parameters
+///
+/// - `ctx`    - The context of the application
+/// - `callee` - The closure to apply
+/// - `value`  - The value to apply to the closure
+pub fn apply(ctx: &Ctx, callee: Closure, value: Type) -> Type {
+  eval(&ctx.env.create_value(value.clone()), callee.value)
 }
