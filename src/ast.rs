@@ -161,7 +161,6 @@ pub enum Implicitness {
 /// Expression data type that implements polymorphism for expressions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
-  Function(Function),
   Match(Match),
   Tuple(Tuple),
   Raise(Raise),
@@ -195,13 +194,6 @@ pub struct Case {
 /// against a list of cases.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Match {
-  pub value: Term,
-  pub cases: Vec<Case>,
-}
-
-/// Matches a function value agains't a list of cases.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Function {
   pub value: Term,
   pub cases: Vec<Case>,
 }

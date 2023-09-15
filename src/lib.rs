@@ -12,15 +12,23 @@ use vfs::ModuleLoader;
 /// `salsa` crate to incremental computing.
 #[salsa::jar(db = ZureDb)]
 pub struct Jar(
-  crate::src::Module,
-  crate::src::ModuleId,
-  crate::src::File,
-  crate::parser::parse,
-  crate::src::TopLevel,
-  crate::src::Term,
-  crate::src::FunctionId,
-  crate::src::Variant,
-  crate::src::Parameter,
+  parser::parse,
+  src::Module,
+  src::ModuleId,
+  src::File,
+  src::TopLevel,
+  src::Term,
+  src::FunctionId,
+  src::Variant,
+  src::Parameter,
+  ast::Module,
+  ast::ModuleId,
+  ast::File,
+  ast::TopLevel,
+  ast::Term,
+  ast::FunctionId,
+  ast::Variant,
+  ast::Parameter,
 );
 
 /// The database trait were we find the incremental components, and
@@ -40,3 +48,4 @@ pub mod parser;
 pub mod solver;
 pub mod src;
 pub mod vfs;
+pub mod ast;

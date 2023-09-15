@@ -5,5 +5,5 @@ type 'a option =
 
 (* Unwraps a option *)
 let unwrap = function
-  | Some x -> x
-  | None -> raise (Invalid_argument "unwrap")
+| Some x -> x
+| None -> raise (Invalid_argument "unwrap")

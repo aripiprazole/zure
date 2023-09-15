@@ -124,6 +124,6 @@ mod parsing {
     let tokens = lexing::run_lexer(file.contents(db)).unwrap();
     let tokens = tokens.as_slice().spanned((contents.len()..contents.len()).into());
     let imports = parser().parse(tokens).unwrap();
-    Ok(Module::new(db, file, imports))
+    Ok(Module::new(db, file, imports, vec![]))
   }
 }
