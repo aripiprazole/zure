@@ -1,5 +1,8 @@
 use std::path::PathBuf;
-use crate::src::{Identifier, Implicitness, Span};
+
+use crate::src::Identifier;
+use crate::src::Implicitness;
+use crate::src::Span;
 
 /// Module file. It does tracks the imports, and the path of the file, for
 /// incremental computing, and caching the module and build system.
@@ -159,10 +162,36 @@ pub enum Expression {
   Pi(Pi),
 }
 
+#[salsa::tracked]
+pub struct Pattern {
+  pub span: Span,
+  pub data: PatternData,
+}
+
+/// The kind of a pattern, it's used to match a value against a pattern.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PatternData {
+  /// A variable pattern, it's a pattern that matches any value, and binds
+  /// the value to a variable.
+  Var(Identifier),
+
+  /// A tuple pattern, it's a pattern that matches a tuple value, and binds
+  /// the values to variables.
+  Tuple(Vec<Pattern>),
+
+  /// A wildcard pattern, it's a pattern that matches any value, and doesn't
+  /// bind the value to a variable.
+  Wildcard,
+
+  /// A constructor pattern, it's a pattern that matches a constructor value,
+  /// and binds the values to variables.
+  Constructor(Identifier, Vec<Pattern>),
+}
+
 /// A case in the pattern matching
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Case {
-  pub pattern: Term,
+  pub pattern: Pattern,
   pub value: Term,
 }
 

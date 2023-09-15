@@ -7,8 +7,10 @@ pub use debruijin::*;
 pub use metas::*;
 pub use TypeKind::*;
 
+use crate::ast::Case;
 use crate::ast::Expression;
 use crate::ast::Parameter;
+use crate::ast::Pattern;
 use crate::ast::Term;
 use crate::src::Identifier;
 use crate::src::Implicitness;
@@ -17,6 +19,7 @@ use crate::ZureDb;
 
 /// Type constructors are the constructors of the type system. They are used to
 /// represent the types of the language.
+#[derive(Debug, Clone)]
 pub enum Constr {
   Any,
   Type,
@@ -234,12 +237,13 @@ mod metas {
 
 // SECTION: Type check
 #[derive(Debug, Clone)]
-pub struct Ctx<'db> {
+pub struct Ctx {
   pub env: Env,
   pub types: VecDeque<(String, Type)>,
   pub position: RefCell<Span>,
   pub unique: Cell<usize>,
 }
+
 impl Env {
   /// Creates a new environment with the given level and stack.
   pub fn create_value(&self, value: Type) -> Env {
@@ -249,7 +253,7 @@ impl Env {
   }
 }
 
-impl<'db> Ctx<'db> {
+impl Ctx {
   /// Increases the level of the context.
   pub fn lift_lvl(&self) -> Ctx {
     let mut ctx = self.clone();
@@ -297,6 +301,21 @@ pub fn eval(db: &dyn ZureDb, env: &Env, value: Term) -> Type {
   }
 }
 
+fn resolve_pattern(db: &dyn ZureDb, ctx: &Ctx, case: crate::src::Term) -> Pattern {
+  todo!()
+}
+
+fn resolve_binding(db: &dyn ZureDb, ctx: &Ctx, binding: crate::src::LetBinding) -> crate::ast::LetBinding {
+  todo!()
+}
+
+fn resolve_case(db: &dyn ZureDb, ctx: &Ctx, case: crate::src::Case) -> Case {
+  Case {
+    pattern: resolve_pattern(db, ctx, case.pattern),
+    value: resolve(db, ctx, case.value),
+  }
+}
+
 /// Performs resolution and elaboration of terms to get the type of the term.
 ///
 /// # Parameters
@@ -311,7 +330,7 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
     Universe => Expression::Universe,
     Var(_) => todo!(),
     Text(text) => Expression::Text(text.clone()),
-    Int(int) => Expression::Int(*int),
+    Int(int) => Expression::Int(int),
     Tuple(tuple) => Expression::Tuple(crate::ast::Tuple {
       terms: tuple.terms.into_iter().map(|term| resolve(db, ctx, term)).collect(),
       is_type_level: tuple.is_type_level,
@@ -320,8 +339,8 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
       exception: resolve(db, ctx, raise.exception),
     }),
     Let(expr) => Expression::Let(crate::ast::Let {
+      binding: resolve_binding(db, ctx, expr.binding),
       next: resolve(db, &ctx.create_value(Type::stuck(ctx.env.lvl + 1)), expr.next),
-      binding: todo!(),
     }),
     Anno(anno) => Expression::Anno(crate::ast::Anno {
       term: resolve(db, ctx, anno.term),
@@ -329,15 +348,15 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
     }),
     Match(expr) => Expression::Match(crate::ast::Match {
       value: resolve(db, ctx, expr.value),
-      cases: expr.cases.into_iter().map(|case| todo!()).collect(),
+      cases: expr.cases.into_iter().map(|case| resolve_case(db, ctx, case)).collect(),
     }),
     Pi(pi) => Expression::Pi(crate::ast::Pi {
       domain: Parameter::new(
         db,
-        /* text         = */ pi.domain.text(&db).clone(),
-        /* implicitness = */ pi.domain.implicitness(&db),
-        /* type_repr    = */ pi.domain.type_repr(&db).map(|term| resolve(db, ctx, term)),
-        /* span         = */ pi.domain.span(&db),
+        /* text         = */ pi.domain.text(db).clone(),
+        /* implicitness = */ pi.domain.implicitness(db),
+        /* type_repr    = */ pi.domain.type_repr(db).map(|term| resolve(db, ctx, term)),
+        /* span         = */ pi.domain.span(db),
       ),
       implicitness: pi.implicitness,
       codomain: resolve(db, &ctx.create_value(Type::stuck(ctx.env.lvl + 1)), pi.codomain),
@@ -373,16 +392,18 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
         .parameters
         .into_iter()
         .map(|parameter| {
-          local_ctx = local_ctx.create_value(Type::stuck(local_ctx.env.lvl + 1));
+          local_ctx = local_ctx.clone().create_value(Type::stuck(local_ctx.env.lvl + 1));
 
           Parameter::new(
             db,
-            /* text         = */ parameter.text(&db).clone(),
-            /* implicitness = */ parameter.implicitness(&db),
-            /* type_repr    = */ parameter.type_repr(&db).map(|term| resolve(db, &local_ctx, term)),
-            /* span         = */ parameter.span(&db),
+            /* text         = */ parameter.text(db).clone(),
+            /* implicitness = */ parameter.implicitness(db),
+            /* type_repr    = */ parameter.type_repr(db).map(|term| resolve(db, &local_ctx, term)),
+            /* span         = */ parameter.span(db),
           )
         })
+        .collect::<Vec<_>>()
+        .into_iter()
         // Folds to generate one curried function with all the parameters
         // applied to the value.
         .fold(resolve(db, &local_ctx, fun.value), |value, parameter| {
@@ -405,7 +426,11 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
           span.clone(),
           Expression::Match(crate::ast::Match {
             value: Term::new(db, span.clone(), Expression::Var(parameter.clone())),
-            cases: function.cases.into_iter().map(|case| todo!()).collect(),
+            cases: function
+              .cases
+              .into_iter()
+              .map(|case| resolve_case(db, ctx, case))
+              .collect(),
           }),
         ),
       })

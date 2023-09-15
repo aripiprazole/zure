@@ -26,9 +26,9 @@ pub struct Jar(
   ast::File,
   ast::TopLevel,
   ast::Term,
-  ast::Identifier,
   ast::Variant,
   ast::Parameter,
+  ast::Pattern,
 );
 
 /// The database trait were we find the incremental components, and
