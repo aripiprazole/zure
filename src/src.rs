@@ -7,6 +7,14 @@ use std::path::PathBuf;
 pub enum Span {
   Atomic(usize),
   Relative(usize),
+  Generated,
+}
+
+/// Creates a new atomic span.
+impl Default for Span {
+  fn default() -> Self {
+    Self::Generated
+  }
 }
 
 /// Module file. It does tracks the imports, and the path of the file, for
@@ -60,7 +68,7 @@ pub struct Import {
 #[salsa::tracked]
 pub struct Variant {
   #[id]
-  pub id: FunctionId,
+  pub id: Identifier,
 
   /// GADT type representation
   pub type_repr: Option<Term>,
@@ -70,7 +78,7 @@ pub struct Variant {
 /// A variable declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LetDeclaration {
-  pub id: FunctionId,
+  pub id: Identifier,
   pub parameters: Vec<Parameter>,
   pub value: Term,
 }
@@ -78,7 +86,7 @@ pub struct LetDeclaration {
 /// A type declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDeclaration {
-  pub id: FunctionId,
+  pub id: Identifier,
   pub type_repr: Term,
   pub parameters: Vec<Parameter>,
   pub declarations: Vec<Variant>,
@@ -88,7 +96,7 @@ pub struct TypeDeclaration {
 /// A variable declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValDeclaration {
-  pub id: FunctionId,
+  pub id: Identifier,
   pub type_repr: Term,
 }
 
@@ -102,7 +110,7 @@ pub enum Declaration {
 /// The functional id that are applied for every function, inductive, types,
 /// or anything that is inside a module.
 #[salsa::input]
-pub struct FunctionId {
+pub struct Identifier {
   #[return_ref]
   pub text: String,
   pub module: ModuleId,
@@ -124,7 +132,7 @@ pub struct Parameter {
 #[salsa::tracked]
 pub struct TopLevel {
   #[id]
-  pub id: FunctionId,
+  pub id: Identifier,
   pub declaration: Declaration,
   pub span: Span,
 }
@@ -169,7 +177,7 @@ pub enum Expression {
   Appl(Appl),
   Anno(Ann),
   Int(isize),
-  Var(FunctionId),
+  Var(Identifier),
   Fun(Fun),
   Let(Let),
 

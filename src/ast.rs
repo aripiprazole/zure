@@ -1,13 +1,5 @@
 use std::path::PathBuf;
-
-/// The span of a node in the source code. It's used for error reporting.
-///
-/// It can be either incremental or atomic
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Span {
-  Atomic(usize),
-  Relative(usize),
-}
+use crate::src::{Identifier, Span};
 
 /// Module file. It does tracks the imports, and the path of the file, for
 /// incremental computing, and caching the module and build system.
@@ -60,7 +52,7 @@ pub struct Import {
 #[salsa::tracked]
 pub struct Variant {
   #[id]
-  pub id: FunctionId,
+  pub id: Identifier,
 
   /// GADT type representation
   pub type_repr: Option<Term>,
@@ -70,7 +62,7 @@ pub struct Variant {
 /// A variable declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LetDeclaration {
-  pub id: FunctionId,
+  pub id: Identifier,
   pub parameters: Vec<Parameter>,
   pub value: Term,
 }
@@ -78,7 +70,7 @@ pub struct LetDeclaration {
 /// A type declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypeDeclaration {
-  pub id: FunctionId,
+  pub id: Identifier,
   pub type_repr: Term,
   pub parameters: Vec<Parameter>,
   pub declarations: Vec<Variant>,
@@ -88,7 +80,7 @@ pub struct TypeDeclaration {
 /// A variable declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValDeclaration {
-  pub id: FunctionId,
+  pub id: Identifier,
   pub type_repr: Term,
 }
 
@@ -97,16 +89,6 @@ pub enum Declaration {
   Let(LetDeclaration),
   Val(ValDeclaration),
   Type(TypeDeclaration),
-}
-
-/// The functional id that are applied for every function, inductive, types,
-/// or anything that is inside a module.
-#[salsa::input]
-pub struct FunctionId {
-  #[return_ref]
-  pub text: String,
-  pub module: ModuleId,
-  pub span: Span,
 }
 
 /// Parameter for types or let declarations.
@@ -124,7 +106,7 @@ pub struct Parameter {
 #[salsa::tracked]
 pub struct TopLevel {
   #[id]
-  pub id: FunctionId,
+  pub id: Identifier,
   pub declaration: Declaration,
   pub span: Span,
 }
@@ -168,9 +150,10 @@ pub enum Expression {
   Appl(Appl),
   Anno(Ann),
   Int(isize),
-  Var(FunctionId),
+  Var(Identifier),
   Fun(Fun),
   Let(Let),
+  Idx(crate::typer::Idx),
 
   // SECTION: Types
   /// The universe type, *-type, or the type of types.

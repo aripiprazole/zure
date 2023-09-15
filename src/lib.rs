@@ -18,7 +18,7 @@ pub struct Jar(
   src::File,
   src::TopLevel,
   src::Term,
-  src::FunctionId,
+  src::Identifier,
   src::Variant,
   src::Parameter,
   ast::Module,
@@ -26,7 +26,7 @@ pub struct Jar(
   ast::File,
   ast::TopLevel,
   ast::Term,
-  ast::FunctionId,
+  ast::Identifier,
   ast::Variant,
   ast::Parameter,
 );
@@ -45,7 +45,7 @@ extern crate salsa_2022 as salsa;
 // SECTION: Module re-exports
 pub mod db;
 pub mod parser;
-pub mod solver;
 pub mod src;
 pub mod vfs;
 pub mod ast;
+pub mod typer;
