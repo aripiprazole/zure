@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::cell::{Cell, RefCell};
+use std::collections::VecDeque;
 
 pub use debruijin::*;
 pub use metas::*;
@@ -226,11 +227,18 @@ mod metas {
 // SECTION: Type check
 #[derive(Debug, Clone)]
 pub struct Ctx<'db> {
-  pub db: &'db dyn ZureDb,
   pub env: Env,
-  pub types: Vec<(String, Type)>,
+  pub types: VecDeque<(String, Type)>,
   pub position: RefCell<Span>,
   pub unique: Cell<usize>
+}
+impl Env {
+  /// Creates a new environment with the given level and stack.
+  pub fn create_value(&self, value: Type) -> Env {
+    let mut ctx = self.clone();
+    ctx.stack.push(value);
+    ctx
+  }
 }
 
 impl<'db> Ctx<'db> {
@@ -238,17 +246,26 @@ impl<'db> Ctx<'db> {
   pub fn create_value(&self, value: Type) -> Ctx {
     let mut ctx = self.clone();
     ctx.env.lvl += 1;
-    ctx.env.stack.push(value);
+    ctx.env.stack.push(value.clone());
+    ctx.types.push_front((self.fresh_name(), value));
     ctx
+  }
+
+  /// Creates a new environment with the given level and stack.
+  pub fn fresh_name(&self) -> String {
+    let name = format!("t{}", self.unique.get());
+    self.unique.set(self.unique.get() + 1);
+    name
   }
 }
 
 /// Evaluates a value to get the type of the value. It does elaborate the
 /// expression to get an elaborated value.
-pub fn eval(ctx: &Ctx, value: Term) -> Type {
+pub fn eval(db: &dyn ZureDb, env: &Env, value: Term) -> Type {
   use Expression::*;
 
-  match value.data(ctx.db) {
+  let _ = env;
+  match value.data(db) {
     Match(_) => todo!(),
     Tuple(_) => todo!(),
     Raise(_) => todo!(),
@@ -265,13 +282,37 @@ pub fn eval(ctx: &Ctx, value: Term) -> Type {
   }
 }
 
+/// Performs resolution and elaboration of terms to get the type of the term.
+///
+/// # Parameters
+///
+/// - `db`    - The incremental database of the application
+/// - `ctx`   - The context of the application
+/// - `value` - The value to resolve
+pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
+  todo!()
+}
+
+/// Infers the type for a term. It does resolve the term, and then elaborates
+/// the term to get the type of the term.
+///
+/// # Parameters
+///
+/// - `db`    - The incremental database of the application
+/// - `ctx`   - The context of the application
+/// - `value` - The value to infer
+pub fn infer(db: &dyn ZureDb, ctx: &Ctx, value: &Term) -> Type {
+  todo!()
+}
+
 /// Applies a closure with a value to get the result of the application.
 ///
 /// # Parameters
 ///
-/// - `ctx`    - The context of the application
+/// - `db`     - The incremental database of the application
+/// - `env`    - The environment of the application
 /// - `callee` - The closure to apply
 /// - `value`  - The value to apply to the closure
-pub fn apply(ctx: &Ctx, callee: Closure, value: Type) -> Type {
-  eval(&ctx.env.create_value(value.clone()), callee.value)
+pub fn apply(db: &dyn ZureDb, env: &Env, callee: Closure, value: Type) -> Type {
+  eval(db, &env.create_value(value.clone()), callee.value)
 }
