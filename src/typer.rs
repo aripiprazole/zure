@@ -305,6 +305,19 @@ pub fn infer(db: &dyn ZureDb, ctx: &Ctx, value: &Term) -> Type {
   todo!()
 }
 
+/// Checks the type of a term. It does resolve the term, and then elaborates
+/// checking a term against a type.
+///
+/// # Parameters
+///
+/// - `db`        - The incremental database of the application
+/// - `ctx`       - The context of the application
+/// - `value`     - The value to check
+/// - `type_repr` - The type to check against
+pub fn check(db: &dyn ZureDb, ctx: &Ctx, value: &Term, type_repr: &Type) -> (Term, Type) {
+  todo!()
+}
+
 /// Applies a closure with a value to get the result of the application.
 ///
 /// # Parameters
