@@ -1,12 +1,15 @@
-use std::rc::Rc;
-use std::cell::{Cell, RefCell};
+use std::cell::Cell;
+use std::cell::RefCell;
 use std::collections::VecDeque;
+use std::rc::Rc;
 
 pub use debruijin::*;
 pub use metas::*;
 pub use TypeKind::*;
 
-use crate::ast::{Expression, Term};
+use crate::ast::Expression;
+use crate::ast::Parameter;
+use crate::ast::Term;
 use crate::src::Identifier;
 use crate::src::Implicitness;
 use crate::src::Span;
@@ -14,7 +17,12 @@ use crate::ZureDb;
 
 /// Type constructors are the constructors of the type system. They are used to
 /// represent the types of the language.
-pub struct Constr {}
+pub enum Constr {
+  Any,
+  Type,
+  Int,
+  String,
+}
 
 /// A spine is a list of values that are applied to a function.
 pub type Spine = Vec<Type>;
@@ -230,7 +238,7 @@ pub struct Ctx<'db> {
   pub env: Env,
   pub types: VecDeque<(String, Type)>,
   pub position: RefCell<Span>,
-  pub unique: Cell<usize>
+  pub unique: Cell<usize>,
 }
 impl Env {
   /// Creates a new environment with the given level and stack.
@@ -242,6 +250,13 @@ impl Env {
 }
 
 impl<'db> Ctx<'db> {
+  /// Increases the level of the context.
+  pub fn lift_lvl(&self) -> Ctx {
+    let mut ctx = self.clone();
+    ctx.env.lvl += 1;
+    ctx
+  }
+
   /// Creates a new environment with the given level and stack.
   pub fn create_value(&self, value: Type) -> Ctx {
     let mut ctx = self.clone();
@@ -290,7 +305,112 @@ pub fn eval(db: &dyn ZureDb, env: &Env, value: Term) -> Type {
 /// - `ctx`   - The context of the application
 /// - `value` - The value to resolve
 pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
-  todo!()
+  use crate::src::Expression::*;
+
+  Term::new(db, value.span(db), match value.data(db) {
+    Universe => Expression::Universe,
+    Var(_) => todo!(),
+    Text(text) => Expression::Text(text.clone()),
+    Int(int) => Expression::Int(*int),
+    Tuple(tuple) => Expression::Tuple(crate::ast::Tuple {
+      terms: tuple.terms.into_iter().map(|term| resolve(db, ctx, term)).collect(),
+      is_type_level: tuple.is_type_level,
+    }),
+    Raise(raise) => Expression::Raise(crate::ast::Raise {
+      exception: resolve(db, ctx, raise.exception),
+    }),
+    Let(expr) => Expression::Let(crate::ast::Let {
+      next: resolve(db, &ctx.create_value(Type::stuck(ctx.env.lvl + 1)), expr.next),
+      binding: todo!(),
+    }),
+    Anno(anno) => Expression::Anno(crate::ast::Anno {
+      term: resolve(db, ctx, anno.term),
+      type_repr: resolve(db, ctx, anno.type_repr),
+    }),
+    Match(expr) => Expression::Match(crate::ast::Match {
+      value: resolve(db, ctx, expr.value),
+      cases: expr.cases.into_iter().map(|case| todo!()).collect(),
+    }),
+    Pi(pi) => Expression::Pi(crate::ast::Pi {
+      domain: Parameter::new(
+        db,
+        /* text         = */ pi.domain.text(&db).clone(),
+        /* implicitness = */ pi.domain.implicitness(&db),
+        /* type_repr    = */ pi.domain.type_repr(&db).map(|term| resolve(db, ctx, term)),
+        /* span         = */ pi.domain.span(&db),
+      ),
+      implicitness: pi.implicitness,
+      codomain: resolve(db, &ctx.create_value(Type::stuck(ctx.env.lvl + 1)), pi.codomain),
+    }),
+    // Resolves the applications of a function. It does resolve the callee,
+    // and transform the spine of application into a bunch of curried calls.
+    Appl(appl) => {
+      // Applies the spine of applications into one each application
+      // to be easier to deal with currying in the elaboration and
+      // infer/checking phases.
+      return appl
+        .spine
+        .into_iter()
+        .fold(resolve(db, ctx, appl.callee), |callee, value| {
+          Term::new(
+            db,
+            value.span(db),
+            Expression::Appl(crate::ast::Appl {
+              callee,
+              value: resolve(db, ctx, value),
+            }),
+          )
+        });
+    }
+    // Maps an uncurried function call into a curried function call resolving
+    // the parameters and the value.
+    Fun(fun) => {
+      // Creates a local context to accumulate the level of the parameters, which will
+      // be increased by the occurrence of a parameter.
+      let mut local_ctx = ctx.clone();
+      let span = value.span(db);
+      return fun
+        .parameters
+        .into_iter()
+        .map(|parameter| {
+          local_ctx = local_ctx.create_value(Type::stuck(local_ctx.env.lvl + 1));
+
+          Parameter::new(
+            db,
+            /* text         = */ parameter.text(&db).clone(),
+            /* implicitness = */ parameter.implicitness(&db),
+            /* type_repr    = */ parameter.type_repr(&db).map(|term| resolve(db, &local_ctx, term)),
+            /* span         = */ parameter.span(&db),
+          )
+        })
+        // Folds to generate one curried function with all the parameters
+        // applied to the value.
+        .fold(resolve(db, &local_ctx, fun.value), |value, parameter| {
+          Term::new(db, span.clone(), Expression::Fun(crate::ast::Fun { parameter, value }))
+        });
+    }
+    // Generates a lambda applying a pattern matching against it
+    // it's like the \case extension in haskell, or even the function
+    // keyword in OCaml.
+    Function(function) => {
+      // `function | Some a -> a | None -> panic`, turns into `fun a -> match a ...`
+      let span = value.span(db);
+      let name = ctx.fresh_name();
+      let parameter = Identifier::new(db, name.clone(), None, span.clone());
+
+      Expression::Fun(crate::ast::Fun {
+        parameter: Parameter::new(db, name, Implicitness::Explicit, None, span.clone()),
+        value: Term::new(
+          db,
+          span.clone(),
+          Expression::Match(crate::ast::Match {
+            value: Term::new(db, span.clone(), Expression::Var(parameter.clone())),
+            cases: function.cases.into_iter().map(|case| todo!()).collect(),
+          }),
+        ),
+      })
+    }
+  })
 }
 
 /// Infers the type for a term. It does resolve the term, and then elaborates

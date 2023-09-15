@@ -113,7 +113,7 @@ pub enum Declaration {
 pub struct Identifier {
   #[return_ref]
   pub text: String,
-  pub module: ModuleId,
+  pub module: Option<ModuleId>,
   pub span: Span,
 }
 
@@ -175,7 +175,7 @@ pub enum Expression {
   Raise(Raise),
   Text(String),
   Appl(Appl),
-  Anno(Ann),
+  Anno(Anno),
   Int(isize),
   Var(Identifier),
   Fun(Fun),
@@ -249,7 +249,7 @@ pub struct Raise {
 /// Type annotation expression, it's an expression that has a type annotation
 /// in it.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Ann {
+pub struct Anno {
   pub term: Term,
   pub type_repr: Term,
 }
@@ -259,7 +259,7 @@ pub struct Ann {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pi {
   pub domain: Parameter,
-  pub icit: Implicitness,
+  pub implicitness: Implicitness,
   pub codomain: Term,
 }
 

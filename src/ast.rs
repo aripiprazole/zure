@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-use crate::src::{Identifier, Span};
+use crate::src::{Identifier, Implicitness, Span};
 
 /// Module file. It does tracks the imports, and the path of the file, for
 /// incremental computing, and caching the module and build system.
@@ -115,8 +115,8 @@ pub struct TopLevel {
 /// representation of the expression, and the parameters of the expression.
 #[salsa::tracked]
 pub struct Term {
-  pub data: Expression,
   pub span: Span,
+  pub data: Expression,
 }
 
 /// A module opening in a let expression.
@@ -133,13 +133,6 @@ pub enum LetBinding {
   Open(LetOpen),
 }
 
-/// The implicitness of a parameter.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum Implicitness {
-  Explicit,
-  Implicit,
-}
-
 /// Expression data type that implements polymorphism for expressions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
@@ -148,7 +141,7 @@ pub enum Expression {
   Raise(Raise),
   Text(String),
   Appl(Appl),
-  Anno(Ann),
+  Anno(Anno),
   Int(isize),
   Var(Identifier),
   Fun(Fun),
@@ -194,7 +187,7 @@ pub struct Tuple {
 /// anonymously a function.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fun {
-  pub parameters: Vec<Parameter>,
+  pub parameter: Parameter,
   pub value: Term,
 }
 
@@ -216,7 +209,7 @@ pub struct Raise {
 /// Type annotation expression, it's an expression that has a type annotation
 /// in it.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Ann {
+pub struct Anno {
   pub term: Term,
   pub type_repr: Term,
 }
@@ -226,7 +219,7 @@ pub struct Ann {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pi {
   pub domain: Parameter,
-  pub icit: Implicitness,
+  pub implicitness: Implicitness,
   pub codomain: Term,
 }
 
@@ -235,5 +228,5 @@ pub struct Pi {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Appl {
   pub callee: Term,
-  pub spine: Vec<Term>,
+  pub value: Term,
 }
