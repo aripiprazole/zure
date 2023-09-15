@@ -64,11 +64,36 @@ pub struct Variant {
   pub parameters: Vec<Term>,
 }
 
+/// A variable declaration in a let expression.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LetDeclaration {
+  pub id: FunctionId,
+  pub parameters: Vec<Parameter>,
+  pub value: Term,
+}
+
+/// A type declaration in a let expression.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeDeclaration {
+  pub id: FunctionId,
+  pub type_repr: Term,
+  pub parameters: Vec<Parameter>,
+  pub declarations: Vec<Variant>,
+  pub value: Term,
+}
+
+/// A variable declaration in a let expression.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValDeclaration {
+  pub id: FunctionId,
+  pub type_repr: Term,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Declaration {
-  Inductive(Vec<Variant>),
-  Value(Term),
-  Signature,
+  Let(LetDeclaration),
+  Val(ValDeclaration),
+  Type(TypeDeclaration),
 }
 
 /// The functional id that are applied for every function, inductive, types,
@@ -86,7 +111,8 @@ pub struct FunctionId {
 pub struct Parameter {
   #[return_ref]
   pub text: String,
-  pub type_repr: Option<Expression>,
+  pub implicitness: Implicitness,
+  pub type_repr: Option<Term>,
   pub span: Span,
 }
 
@@ -96,8 +122,6 @@ pub struct Parameter {
 pub struct TopLevel {
   #[id]
   pub id: FunctionId,
-  pub type_repr: Term,
-  pub parameters: Vec<Parameter>,
   pub declaration: Declaration,
   pub span: Span,
 }
@@ -107,16 +131,6 @@ pub struct TopLevel {
 #[salsa::tracked]
 pub struct Term {
   pub data: Expression,
-  pub span: Span,
-}
-
-/// A variable declaration in a let expression.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LetVariable {
-  pub id: FunctionId,
-  pub type_repr: Term,
-  pub parameters: Vec<Parameter>,
-  pub declaration: Expression,
   pub span: Span,
 }
 
@@ -130,7 +144,7 @@ pub struct LetOpen {
 /// A variable binding in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LetBinding {
-  Variable(LetVariable),
+  Variable(LetDeclaration),
   Open(LetOpen),
 }
 
@@ -141,29 +155,96 @@ pub enum Implicitness {
   Implicit,
 }
 
+/// Expression data type that implements polymorphism for expressions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
+  Function(Function),
+  Match(Match),
+  Tuple(Tuple),
+  Raise(Raise),
+  Text(String),
+  Appl(Appl),
+  Anno(Ann),
   Int(isize),
-  Txt(String),
   Var(FunctionId),
-  App(App),
-  Lam(Lam),
+  Fun(Fun),
   Let(Let),
+
+  // SECTION: Types
+  /// The universe type, *-type, or the type of types.
+  ///
+  /// It's the type of all types, and it's the type of the universe itself.
+  Universe,
+
+  /// Pi type is a dependent type, it's a function type where the codomain
+  /// depends on the domain.
   Pi(Pi),
 }
 
+/// A case in the pattern matching
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Lam {
+pub struct Case {
+  pub pattern: Term,
+  pub value: Term,
+}
+
+/// Pattern matching expression, it's an expression that matches a value
+/// against a list of cases.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Match {
+  pub value: Term,
+  pub cases: Vec<Case>,
+}
+
+/// Matches a function value agains't a list of cases.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Function {
+  pub value: Term,
+  pub cases: Vec<Case>,
+}
+
+/// A tuple that can be used as a type, or a value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Tuple {
+  pub terms: Vec<Term>,
+
+  /// If it's a type repr, like `a ** b`, or if it's a value, like `(a, b)`.
+  pub is_type_level: bool,
+}
+
+/// Abstraction expression, it's a function that doesn't have a name that runs
+/// anonymously a function.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Fun {
   pub parameters: Vec<Parameter>,
   pub value: Term,
 }
 
+/// Let binding expression, it's a simple expression that binds a variable
+/// to a value.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Let {
-  pub bindings: Vec<LetBinding>,
+  pub binding: LetBinding,
   pub next: Term,
 }
 
+/// Raises an exception to be catch by the exception handler. It's used for
+/// error handling.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Raise {
+  pub exception: Term,
+}
+
+/// Type annotation expression, it's an expression that has a type annotation
+/// in it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Ann {
+  pub term: Term,
+  pub type_repr: Term,
+}
+
+/// Pi type is a dependent type, it's a function type where the codomain
+/// depends on the domain.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Pi {
   pub domain: Parameter,
@@ -171,8 +252,10 @@ pub struct Pi {
   pub codomain: Term,
 }
 
+/// Application of a function to a list of arguments, it's called spine
+/// where the function is the callee, and the arguments are the spine.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct App {
+pub struct Appl {
   pub callee: Term,
   pub spine: Vec<Term>,
 }
