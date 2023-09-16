@@ -425,7 +425,7 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
           db,
           span.clone(),
           Expression::Match(crate::ast::Match {
-            value: Term::new(db, span.clone(), Expression::Var(parameter.clone())),
+            value: Term::new(db, span.clone(), Expression::Var(parameter)),
             cases: function
               .cases
               .into_iter()

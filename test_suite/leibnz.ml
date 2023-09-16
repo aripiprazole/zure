@@ -23,8 +23,8 @@ let eq_symmetry =
 val eq_transitivity : {'a, 'b, 'c} -> eq 'a 'b -> eq 'b 'c -> eq 'a 'c
 let eq_transitivity =
   fun {'a, 'b, 'c} e e' ->
-    match e, e' with
-    | Refl, Refl -> Refl
+    match (e, e') with
+    | (Refl, Refl) -> Refl
 
 (* Congruence proof *)
 val eq_congruence : {'a, 'b, 'f : ({'dom, 'cod} -> 'dom -> 'cod)} -> eq 'a 'b -> eq ('f 'a) ('f 'b)
@@ -47,8 +47,8 @@ let symmetry : {'a, 'b} -> ('a := 'b) -> ('b := 'a) =
 (* Transitivity proof *)
 let transitivity : {'a, 'b, 'c} -> ('a := 'b) -> ('b := 'c) -> ('a := 'c) =
   fun {'a, 'b, 'c} e e' ->
-    match e, e' with
-    | Refl, Refl -> Refl
+    match (e, e') with
+    | (Refl, Refl) -> Refl
 
 (* Congruence proof *)
 let congruence : {'a, 'b, 'f : ({'dom, 'cod} -> 'dom -> 'cod)} -> ('a := 'b) -> ('f 'a := 'f 'b) =
