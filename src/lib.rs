@@ -30,6 +30,7 @@ pub struct Jar(
   ast::Variant,
   ast::Parameter,
   ast::Pattern,
+  error::Failure,
 );
 
 /// The database trait were we find the incremental components, and
@@ -46,6 +47,7 @@ extern crate salsa_2022 as salsa;
 // SECTION: Module re-exports
 pub mod ast;
 pub mod db;
+pub mod error;
 pub mod framework;
 pub mod parser;
 pub mod src;
