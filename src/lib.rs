@@ -5,6 +5,7 @@
 //! evaluation.
 //!
 //! The configurations that are applied to CLI are done by the `main.rs` binary crate.
+#![feature(test)]
 
 use vfs::ModuleLoader;
 
@@ -43,9 +44,10 @@ impl<Db: salsa::DbWithJar<Jar>> ZureDb for Db where Db: ModuleLoader {}
 extern crate salsa_2022 as salsa;
 
 // SECTION: Module re-exports
+pub mod ast;
 pub mod db;
+pub mod framework;
 pub mod parser;
 pub mod src;
-pub mod vfs;
-pub mod ast;
 pub mod typer;
+pub mod vfs;

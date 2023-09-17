@@ -1,3 +1,6 @@
+#![feature(custom_test_frameworks)]
+#![test_runner(zure::framework::zure_test_suite)]
+
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -8,6 +11,8 @@ use salsa_2022::DebugWithDb;
 use zure::parser::parse;
 use zure::src::ModuleId;
 use zure::vfs::ModuleLoader;
+
+pub mod tests;
 
 /// Zure's CLI. It's using the [`clap`] crate for parsing the commands,
 /// and it's using [`miette`] for error handling.

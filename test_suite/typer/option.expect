@@ -1,0 +1,2 @@
+>> let option := (b : 'a) -> <type>
+>> let unwrap : forall 'a. option 'a -> 'a := <fun>

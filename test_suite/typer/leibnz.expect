@@ -1,0 +1,11 @@
+>> let eq := forall 'a. (b : 'a) -> (c : 'a) -> <type>
+>> val eq_identity : forall 'a. eq 'a 'a -> eq 'a 'a
+>> let eq_identity := <fun>
+>> val eq_transitivity : forall 'a 'b 'c. eq 'a 'b -> eq 'b 'c -> eq 'a 'c
+>> let eq_transitivity := <fun>
+>> val eq_congruence : forall 'a 'b ('c : forall 'd 'e, 'd -> 'e). eq 'a 'b -> eq ('c 'a) ('c 'b)
+>> let eq_congruence := <fun>
+>> let (=) : forall 'a. (b : 'a) -> (c : 'a) -> eq 'b 'c := <fun>
+>> let identity : forall 'a. 'a = 'a -> 'a = 'a := <fun>
+>> let symmetry : forall 'a 'b. 'a = 'b -> 'b = 'a := <fun>
+>> let congruence : forall 'a 'b ('c : forall 'd 'e, 'd -> 'e). 'a = 'b -> 'c 'a = 'c 'b := <fun>
