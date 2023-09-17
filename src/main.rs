@@ -3,6 +3,7 @@
 
 use std::path::PathBuf;
 
+use bupropion::BupropionHandlerOpts;
 use clap::Parser;
 use eyre::eyre;
 use eyre::ContextCompat;
@@ -30,6 +31,7 @@ pub struct Cli {
 
 /// Zure's entrypoint.
 fn main() -> eyre::Result<()> {
+  bupropion::install(BupropionHandlerOpts::new)?;
   env_logger::try_init()?;
 
   let mut db = zure::db::LocalDb::default();

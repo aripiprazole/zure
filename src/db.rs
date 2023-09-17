@@ -1,6 +1,3 @@
-use std::path::PathBuf;
-
-use crate::src::File;
 use crate::src::ModuleId;
 
 /// This is the local implementation of the database. It does implement the cache
@@ -12,9 +9,8 @@ use crate::src::ModuleId;
 pub struct LocalDb {
   /// The local were salsa stores the caches, and the already-computed
   /// stuff.
-  storage: salsa::Storage<LocalDb>,
-
-  pub(crate) files: dashmap::DashMap<PathBuf, File>,
+  pub storage: salsa::Storage<LocalDb>,
+  pub dependency_graph: crate::vfs::DependencyGraph,
   pub modules: im::HashMap<String, ModuleId>,
 }
 
@@ -25,7 +21,7 @@ impl salsa::ParallelDatabase for LocalDb {
     salsa::Snapshot::new(LocalDb {
       storage: self.storage.snapshot(),
       modules: self.modules.clone(),
-      files: self.files.clone(),
+      dependency_graph: self.dependency_graph.clone(),
     })
   }
 }

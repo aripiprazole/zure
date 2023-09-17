@@ -13,6 +13,11 @@ use eyre::Context;
 use crate::db::LocalDb;
 use crate::src::File;
 
+#[derive(Default, Clone)]
+pub struct DependencyGraph {
+  pub value: dashmap::DashMap<PathBuf, File>
+}
+
 pub trait ModuleLoader {
   fn root_folder(&self) -> PathBuf;
 
@@ -33,7 +38,7 @@ impl ModuleLoader for LocalDb {
 
     // Tries to read the file from the cache. If can't read it, then
     // reads it from the file system.
-    Ok(match self.files.entry(path.clone()) {
+    Ok(match self.dependency_graph.value.entry(path.clone()) {
       // If the file already exists in our cache then just return it.
       Entry::Occupied(entry) => *entry.get(),
 
