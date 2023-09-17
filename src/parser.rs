@@ -185,17 +185,17 @@ mod parsing {
   }
 
   /// Report an span error to the end-to-end user.
-  fn report_span(span: Span) -> SourceSpan {
+  fn fix_span(span: SourceSpan) -> Span {
     todo!()
   }
 
   /// Creates a new zure local span based on the [`chumsky`] span.
-  fn create_zure_span(span: SimpleSpan) -> Span {
+  fn create_zure_span(span: SimpleSpan) -> SourceSpan {
     todo!()
   }
 
   impl<'src> Parser<'src> {
-    fn peek(&mut self) -> (&Token, Span) {
+    fn peek(&mut self) -> (&Token, SourceSpan) {
       if self.index >= self.tokens.len() {
         panic!();
       }
@@ -211,7 +211,7 @@ mod parsing {
       // p.bump();
     } else {
       publish_failure(db, InnerError::UnexpectedToken {
-        at: report_span(at),
+        at,
         found: token.clone(),
         expected,
       });

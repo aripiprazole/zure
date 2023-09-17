@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use miette::{IntoDiagnostic, ErrReport};
-
 use crate::ZureDb;
 
 /// The error accumulator that will be presented to the user using
