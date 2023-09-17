@@ -6,6 +6,7 @@ use std::rc::Rc;
 pub use debruijin::*;
 pub use metas::*;
 pub use TypeKind::*;
+pub use Constr::*;
 
 use crate::ast::Case;
 use crate::ast::Expression;
@@ -66,6 +67,11 @@ pub enum TypeKind {
 pub struct Type(pub Rc<TypeKind>, Span);
 
 impl Type {
+  /// Synthesize a new value with the given kind.
+  pub fn synthesize(kind: TypeKind) -> Self {
+    Self::new(Span::default(), kind)
+  }
+
   /// Creates a new value with the given kind and span.
   pub fn new(span: Span, kind: TypeKind) -> Self {
     Self(kind.into(), span)
@@ -447,7 +453,10 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
 /// - `ctx`   - The context of the application
 /// - `value` - The value to infer
 pub fn infer(db: &dyn ZureDb, ctx: &Ctx, value: &Term) -> Type {
-  todo!()
+  let _ = db;
+  let _ = ctx;
+  let _ = value;
+  Type::synthesize(Constr(Rc::new(Any)))
 }
 
 /// Checks the type of a term. It does resolve the term, and then elaborates
@@ -459,8 +468,11 @@ pub fn infer(db: &dyn ZureDb, ctx: &Ctx, value: &Term) -> Type {
 /// - `ctx`       - The context of the application
 /// - `value`     - The value to check
 /// - `type_repr` - The type to check against
-pub fn check(db: &dyn ZureDb, ctx: &Ctx, value: &Term, type_repr: &Type) -> (Term, Type) {
-  todo!()
+pub fn check(db: &dyn ZureDb, ctx: &Ctx, value: Term, type_repr: &Type) -> (Term, Type) {
+  let _ = db;
+  let _ = ctx;
+  let _ = type_repr;
+  (value, Type::synthesize(Constr(Rc::new(Any))))
 }
 
 /// Applies a closure with a value to get the result of the application.
