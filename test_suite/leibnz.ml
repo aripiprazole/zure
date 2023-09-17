@@ -9,25 +9,25 @@ type {'t} ('a : 't) ('b : 't) eq =
   | Refl : eq 'a 'a
 
 (* Identity proof *)
-val eq_identity : {'a} -> eq 'a 'a -> eq 'a 'a
+val eq_identity : forall 'a. eq 'a 'a -> eq 'a 'a
 let eq_identity =
   fun {'a} e -> e
 
 (* Symmetry proof *)
-val eq_symmetry : {'a, 'b} -> eq 'a 'b -> eq 'b 'a
+val eq_symmetry : forall 'a 'b. eq 'a 'b -> eq 'b 'a
 let eq_symmetry =
   fun {'a, 'b} -> function
   | Refl -> Refl
 
 (* Transitivity proof *)
-val eq_transitivity : {'a, 'b, 'c} -> eq 'a 'b -> eq 'b 'c -> eq 'a 'c
+val eq_transitivity : forall 'a 'b 'c. eq 'a 'b -> eq 'b 'c -> eq 'a 'c
 let eq_transitivity =
   fun {'a, 'b, 'c} e e' ->
     match (e, e') with
     | (Refl, Refl) -> Refl
 
 (* Congruence proof *)
-val eq_congruence : {'a, 'b, 'f : ({'dom, 'cod} -> 'dom -> 'cod)} -> eq 'a 'b -> eq ('f 'a) ('f 'b)
+val eq_congruence : forall 'a 'b ('f : forall 'dom 'cod, 'dom -> 'cod). eq 'a 'b -> eq ('f 'a) ('f 'b)
 let eq_congruence =
   fun {'a, 'b, 'f} -> function
   | Refl -> Refl
@@ -51,6 +51,6 @@ let transitivity : {'a, 'b, 'c} -> ('a := 'b) -> ('b := 'c) -> ('a := 'c) =
     | (Refl, Refl) -> Refl
 
 (* Congruence proof *)
-let congruence : {'a, 'b, 'f : ({'dom, 'cod} -> 'dom -> 'cod)} -> ('a := 'b) -> ('f 'a := 'f 'b) =
+let congruence : forall 'a 'b ('f : forall 'dom 'cod, 'dom -> 'cod). -> ('a := 'b) -> ('f 'a := 'f 'b) =
   fun {'a, 'b, 'f} -> function
   | Refl -> Refl
