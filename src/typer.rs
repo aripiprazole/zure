@@ -6,8 +6,8 @@ use std::rc::Rc;
 pub use debruijin::*;
 pub use metas::*;
 pub use TypeKind::*;
-pub use Constr::*;
 
+pub use self::Constr::*;
 use crate::ast::Case;
 use crate::ast::Expression;
 use crate::ast::Parameter;
@@ -23,9 +23,9 @@ use crate::ZureDb;
 #[derive(Debug, Clone)]
 pub enum Constr {
   Any,
-  Type,
+  Uni,
   Int,
-  String,
+  Str,
 }
 
 /// A spine is a list of values that are applied to a function.
@@ -129,11 +129,28 @@ impl Type {
 /// Debruijin indexes and levels. It's used for type checker's efficient indexing
 /// and substitution.
 mod debruijin {
+  #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+  pub struct IdxMeta {
+    /// Debug assertion name
+    #[cfg(debug_assertions)]
+    pub(crate) name: &'static str,
+  }
+
+  impl IdxMeta {
+    /// Creates a new meta with the given name.
+    pub fn new(name: String) -> Self {
+      Self {
+        #[cfg(debug_assertions)]
+        name: Box::leak(name.into_boxed_str()),
+      }
+    }
+  }
+
   /// Defines a debruijin level. It does represent the level of the context/environment
   ///
   /// It can be transformed into a debruijin index by using the [`Lvl::as_ix`] method.
   #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-  pub struct Lvl(usize);
+  pub struct Lvl(pub usize);
 
   impl Lvl {
     /// Transforms a level into a debruijin index.
@@ -142,7 +159,7 @@ mod debruijin {
       assert!(l > x, "l > x, but {l} < {x}");
       assert!(l > 0, "l should be greater than 0");
 
-      Idx(l - x - 1)
+      Idx(l - x - 1, Default::default())
     }
   }
 
@@ -163,14 +180,27 @@ mod debruijin {
   /// Defines a debruijin index. That can be converted by two levels.
   ///
   /// It's used to represent a variable in the syntax tree.
-  #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-  pub struct Idx(usize);
+  #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+  pub struct Idx(usize, IdxMeta);
+
+  impl Idx {
+    /// Creates a new index with meta
+    pub fn new(meta: IdxMeta) -> Self {
+      Self(0, meta)
+    }
+  }
+
+  impl From<usize> for Idx {
+    fn from(value: usize) -> Self {
+      Self(value, Default::default())
+    }
+  }
 
   impl std::ops::Add<usize> for Idx {
     type Output = Self;
 
     fn add(self, rhs: usize) -> Self::Output {
-      Self(self.0 + rhs)
+      Self(self.0 + rhs, self.1)
     }
   }
 
@@ -298,7 +328,7 @@ pub fn eval(db: &dyn ZureDb, env: &Env, value: Term) -> Type {
     Appl(_) => todo!(),
     Anno(_) => todo!(),
     Int(_) => todo!(),
-    Var(_) => todo!(),
+    Idn(_) => todo!(),
     Fun(_) => todo!(),
     Let(_) => todo!(),
     Idx(_) => todo!(),
@@ -334,7 +364,20 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
 
   Term::new(db, value.span(db), match value.data(db) {
     Universe => Expression::Universe,
-    Var(_) => todo!(),
+    Var(var) => {
+      let text = var.text(db).clone();
+      let mut types = ctx.types.clone();
+      let mut idx = Idx::new(IdxMeta::new(text.clone()));
+      while let Some((name, _)) = types.pop_front() {
+        if &name == var.text(db) {
+          return Term::new(db, value.span(db), Expression::Idx(idx));
+        }
+
+        idx += 1;
+      }
+
+      panic!("variable not found")
+    }
     Text(text) => Expression::Text(text.clone()),
     Int(int) => Expression::Int(int),
     Tuple(tuple) => Expression::Tuple(crate::ast::Tuple {
@@ -431,7 +474,7 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
           db,
           span.clone(),
           Expression::Match(crate::ast::Match {
-            value: Term::new(db, span.clone(), Expression::Var(parameter)),
+            value: Term::new(db, span.clone(), Expression::Idn(parameter)),
             cases: function
               .cases
               .into_iter()

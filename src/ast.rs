@@ -146,7 +146,7 @@ pub enum Expression {
   Appl(Appl),
   Anno(Anno),
   Int(isize),
-  Var(Identifier),
+  Idn(Identifier),
   Fun(Fun),
   Let(Let),
   Idx(crate::typer::Idx),
