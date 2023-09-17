@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use miette::NamedSource;
 use miette::SourceSpan;
 
@@ -14,9 +16,13 @@ use crate::src::Span;
 pub fn parse(db: &dyn crate::ZureDb, file: File) -> Module {
   parsing::run_parser(db, file).unwrap()
 }
+
+#[salsa::accumulator]
+pub struct Failure(InnerError);
+
 /// Inner specified error for the parser. It's useful
 /// to debug the parser.
-#[derive(miette::Diagnostic, thiserror::Error, Debug)]
+#[derive(miette::Diagnostic, thiserror::Error, Debug, Clone)]
 #[diagnostic(url(docsrs))]
 pub enum InnerError {
   /// Publish the unexpected token error, it's like the parser expected `:=`

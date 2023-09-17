@@ -55,6 +55,13 @@ pub struct File {
   pub contents: String,
 }
 
+/// Creates a new file.
+pub fn new_file(db: &dyn crate::ZureDb, path: PathBuf, contents: String) -> File {
+  let name = path.file_name().unwrap().to_str().unwrap();
+
+  File::new(db, ModuleId::new(db, name.into(), path), contents)
+}
+
 /// Imports are references to another files. They are used to track the
 /// dependencies of the module.
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -14,6 +14,7 @@ use vfs::ModuleLoader;
 #[salsa::jar(db = ZureDb)]
 pub struct Jar(
   parser::parse,
+  parser::Failure,
   src::Module,
   src::ModuleId,
   src::File,

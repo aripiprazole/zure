@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use test::TestDesc;
 use test::TestDescAndFn;
 use test::TestName;
@@ -6,7 +8,7 @@ extern crate test;
 
 pub struct TestSuite {
   pub directory: &'static str,
-  pub run: fn(&str) -> Result<(), miette::Report>,
+  pub run: fn(PathBuf) -> eyre::Result<()>,
 }
 
 pub fn zure_test_suite(tests: &[&TestSuite]) {}
