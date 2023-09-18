@@ -58,6 +58,30 @@ pub enum InnerError {
     at: SourceSpan,
   },
 
+  /// Expected top level statement, but got something else. It reports the error
+  /// to the end-to-end user.
+  /// 
+  /// It's useful to debug the parser and the source code if you are an end-to-end
+  /// user.
+  #[error("expected top level statement")]
+  #[diagnostic(code(E003P))]
+  ExpectedTopLevel {
+    #[label("here")]
+    at: SourceSpan,
+  },
+
+  /// Expected a term, but got something else. It reports the error to the
+  /// end-to-end user.
+  /// 
+  /// It's useful to debug the parser and the source code if you are an end-to-end
+  /// user.
+  #[error("expected term")]
+  #[diagnostic(code(E004P))]
+  ExpectedTerm {
+    #[label("here")]
+    at: SourceSpan,
+  },
+
   /// Fuel of the parser ended, so we can't continue parsing, it's just a
   /// debug error.
   ///
