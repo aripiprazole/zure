@@ -211,6 +211,8 @@ mod parsing {
   use crate::src::Span;
   use crate::ZureDb;
 
+  const MAX_FUEL: usize = 256;
+
   pub struct Parser<'src> {
     src: &'src str,
     tokens: &'src [(Token, SimpleSpan)],
@@ -253,6 +255,36 @@ mod parsing {
       Ok((tok, create_zure_span(*span)))
     }
 
+    /// Bump the parser to the next token.
+    fn advance(&mut self) -> Result<(), InnerError> {
+      // Reports to the user when the file ends unexpectedly. Like if
+      // the user forgot to close a parenthesis.
+      if self.index >= self.tokens.len() {
+        return Err(InnerError::Eof {
+          at: create_zure_span(SimpleSpan::new(self.src.len(), self.src.len())),
+        });
+      }
+
+      self.index += 1;
+      self.refuel()?;
+
+      Ok(())
+    }
+
+    /// Gets more fuel to the parser in production mode
+    #[cfg(not(debug_assertions))]
+    #[inline(always)]
+    fn refuel(&self) -> Result<(), InnerError> {
+      Ok(())
+    }
+
+    /// Gets more fuel to the parser
+    #[cfg(debug_assertions)]
+    fn refuel(&self) -> Result<(), InnerError> {
+      self.fuel.set(MAX_FUEL);
+
+      Ok(())
+    }
 
     /// Consumes fuel in production code, or just return
     /// if we are in debug mode.
@@ -282,7 +314,7 @@ mod parsing {
   fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) -> Result<(), InnerError> {
     let (token, at) = p.peek()?;
     if token.data == expected {
-      // p.bump();
+      p.advance()?;
     } else {
       failwith(db, InnerError::UnexpectedToken {
         at,
