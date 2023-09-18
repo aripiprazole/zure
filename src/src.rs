@@ -186,6 +186,7 @@ pub enum Expression {
   Tuple(Tuple),
   Error(Error),
   Raise(Raise),
+  Group(Term),
   Text(String),
   Appl(Appl),
   Anno(Anno),

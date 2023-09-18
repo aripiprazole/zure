@@ -282,6 +282,7 @@ mod parsing {
   use super::InnerError::*;
   use super::*;
   use crate::error::failwith;
+  use crate::src::Appl;
   use crate::src::Expression;
   use crate::src::Identifier;
   use crate::src::Span;
@@ -289,6 +290,8 @@ mod parsing {
   use crate::ZureDb;
 
   const MAX_FUEL: usize = 256;
+
+  const PRIMARY_FIRST: &[TokenKind] = &[Number, String, Symbol, LeftParen];
 
   pub struct Parser<'src> {
     src: &'src str,
@@ -356,6 +359,14 @@ mod parsing {
       Ok(())
     }
 
+    /// Returns the next token, and advances the parser.
+    #[inline]
+    fn next(&mut self) -> Result<bool, InnerError> {
+      let tok = self.peek()?;
+      self.advance()?;
+      Ok(true)
+    }
+
     /// Gets more fuel to the parser in production mode
     #[cfg(not(debug_assertions))]
     #[inline(always)]
@@ -394,6 +405,17 @@ mod parsing {
 
       Ok(())
     }
+
+    fn at(&self, tokens: &[TokenKind]) -> bool {
+      match self.nth(0) {
+        Ok(value) => tokens.contains(&value),
+        Err(_) => false,
+      }
+    }
+  }
+
+  fn finish(db: &dyn ZureDb, p: &mut Parser, span: Span) -> Result<Span, InnerError> {
+    todo!()
   }
 
   fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) -> Result<(Token, SourceSpan), InnerError> {
@@ -414,8 +436,38 @@ mod parsing {
   /// Return recovery error.
   fn recover(_: Arc<miette::Report>) -> Expression {
     Expression::Error(crate::src::Error {
-      message: format!("failed to parse"),
+      message: "failed to parse".to_string(),
     })
+  }
+
+  /// GRAMMAR: Parses a term.
+  fn term(db: &dyn ZureDb, p: &mut Parser) -> Result<Term, InnerError> {
+    let (token, at) = p.lookahead(0)?;
+    let span = fix_span(at);
+
+    Ok(Term::new(db, span.clone(), match token.data {
+      _ if PRIMARY_FIRST.contains(&token.data) => {
+        let callee = primary(db, p)?;
+        let mut spine = vec![];
+
+        while p.at(PRIMARY_FIRST) {
+          spine.push(primary(db, p)?);
+        }
+
+        if spine.is_empty() {
+          return Ok(callee);
+        } else {
+          let span = finish(db, p, span)?;
+          let appl = Expression::Appl(Appl { callee, spine });
+          return Ok(Term::new(db, span, appl));
+        }
+      }
+      _ => recover(failwith(db, UnexpectedToken {
+        at,
+        found: token.clone(),
+        expected: Number,
+      })),
+    }))
   }
 
   /// GRAMMAR: Parses a primary expression.
@@ -426,6 +478,11 @@ mod parsing {
       Number => Expression::Int(str::parse(&token.text).unwrap()),
       String => Expression::Text(token.text[1..token.text.len() - 1].to_string()),
       Symbol => Expression::Var(Identifier::new(db, token.text, None, fix_span(at))),
+      LeftParen if p.next()? => {
+        let expr = term(db, p)?;
+        expect(db, p, RightParen)?;
+        Expression::Group(expr)
+      }
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
