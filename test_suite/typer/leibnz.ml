@@ -27,7 +27,7 @@ let eq_transitivity :=
     | (Refl, Refl) -> Refl
 
 (* Congruence proof *)
-val eq_congruence : forall 'a 'b ('f : forall 'dom 'cod, 'dom -> 'cod). eq 'a 'b -> eq ('f 'a) ('f 'b)
+val eq_congruence : forall 'a 'b ('f : forall 'dom 'cod. 'dom -> 'cod). eq 'a 'b -> eq ('f 'a) ('f 'b)
 let eq_congruence :=
   fun {'a, 'b, 'f} -> function
   | Refl -> Refl
@@ -51,6 +51,6 @@ let transitivity : forall 'a 'b 'c. 'a = 'b -> 'b = 'c -> 'a = 'c :=
     | (Refl, Refl) -> Refl
 
 (* Congruence proof *)
-let congruence : forall 'a 'b ('f : forall 'dom 'cod, 'dom -> 'cod). 'a = 'b -> 'f 'a = 'f 'b :=
+let congruence : forall 'a 'b ('f : forall 'dom 'cod. 'dom -> 'cod). 'a = 'b -> 'f 'a = 'f 'b :=
   fun {'a, 'b, 'f} -> function
   | Refl -> Refl

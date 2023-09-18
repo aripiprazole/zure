@@ -347,6 +347,17 @@ mod parsing {
   }
 
   impl<'src> Parser<'src> {
+    fn new(src: &'src str, tokens: &'src [(Token, SimpleSpan)]) -> Self {
+      Self {
+        src,
+        tokens,
+        index: 0,
+
+        #[cfg(debug_assertions)]
+        fuel: Cell::new(MAX_FUEL),
+      }
+    }
+
     #[inline]
     fn peek(&mut self) -> Result<(Token, SourceSpan), InnerError> {
       self.lookahead(0)
@@ -396,7 +407,6 @@ mod parsing {
     /// Returns the next token, and advances the parser.
     #[inline]
     fn next(&mut self) -> Result<bool, InnerError> {
-      let tok = self.peek()?;
       self.advance()?;
       Ok(true)
     }
@@ -616,7 +626,12 @@ mod parsing {
   pub fn run_parser(db: &dyn crate::ZureDb, file: File) -> miette::Result<Module> {
     let contents = file.contents(db);
     let tokens = lexing::run_lexer(file.contents(db)).unwrap();
-    top_level;
+    let mut p = Parser::new(contents, &tokens);
+    let mut top_levels = vec![];
+    while p.at(&[W_LET, W_VAL, W_OPEN]) {
+      top_levels.push(top_level(db, &mut p)?);
+    }
+
     todo!()
     // Ok(Module::new(db, file, imports, vec![]))
   }
