@@ -421,7 +421,7 @@ mod parsing {
     let (token, at) = p.lookahead(0)?;
 
     Ok(Term::new(db, fix_span(at), match token.data {
-      Number => expect(db, p, Number).map(|_| Expression::Int(str::parse(&token.text).unwrap()))?,
+      Number => Expression::Int(str::parse(&token.text).unwrap()),
       String => todo!(),
       Symbol => todo!(),
       Open => todo!(),
