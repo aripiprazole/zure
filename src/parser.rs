@@ -108,16 +108,64 @@ mod lexing {
     Number,
     String,
     Symbol,
+    FreeVariable,
+    LeftBracket,
+    RightBracket,
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    LeftArrow,
+    RightArrow,
+    Equal,
+    Colon,
+    ColonEqual,
+    Bar,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Comma,
+    Semi,
+    Forall,
     Open,
+    Let,
+    Type,
+    Val,
   }
 
   impl Display for TokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
       match self {
-        TokenKind::Number => write!(f, "<number>"),
-        TokenKind::String => write!(f, "<string>"),
-        TokenKind::Symbol => write!(f, "<symbol>"),
-        TokenKind::Open => write!(f, "open"),
+        Self::Number => write!(f, "<number>"),
+        Self::String => write!(f, "<string>"),
+        Self::Symbol => write!(f, "<symbol>"),
+        Self::Open => write!(f, "open"),
+        Self::FreeVariable => write!(f, "<free variable>"),
+        Self::LeftBracket => write!(f, "["),
+        Self::RightBracket => write!(f, "]"),
+        Self::LeftParen => write!(f, "("),
+        Self::RightParen => write!(f, ")"),
+        Self::LeftBrace => write!(f, "{{"),
+        Self::RightBrace => write!(f, "}}"),
+        Self::LeftArrow => write!(f, "->"),
+        Self::RightArrow => write!(f, "<-"),
+        Self::Equal => write!(f, "="),
+        Self::Colon => write!(f, ":"),
+        Self::ColonEqual => write!(f, ":="),
+        Self::Bar => write!(f, "|"),
+        Self::Plus => write!(f, "+"),
+        Self::Minus => write!(f, "-"),
+        Self::Star => write!(f, "*"),
+        Self::Slash => write!(f, "/"),
+        Self::Percent => write!(f, "%"),
+        Self::Comma => write!(f, ","),
+        Self::Semi => write!(f, ";"),
+        Self::Forall => write!(f, "forall"),
+        Self::Let => write!(f, "let"),
+        Self::Type => write!(f, "let"),
+        Self::Val => write!(f, "val"),
       }
     }
   }
@@ -134,6 +182,30 @@ mod lexing {
         TokenKind::Number => write!(f, "{}", self.text),
         TokenKind::String => write!(f, "\"{}\"", self.text),
         TokenKind::Symbol => write!(f, "{}", self.text),
+        TokenKind::FreeVariable => write!(f, "'{}", self.text),
+        TokenKind::LeftBracket => write!(f, "["),
+        TokenKind::RightBracket => write!(f, "]"),
+        TokenKind::LeftParen => write!(f, "("),
+        TokenKind::RightParen => write!(f, ")"),
+        TokenKind::LeftBrace => write!(f, "{{"),
+        TokenKind::RightBrace => write!(f, "}}"),
+        TokenKind::LeftArrow => write!(f, "->"),
+        TokenKind::RightArrow => write!(f, "<-"),
+        TokenKind::Equal => write!(f, "="),
+        TokenKind::Colon => write!(f, ":"),
+        TokenKind::ColonEqual => write!(f, ":="),
+        TokenKind::Bar => write!(f, "|"),
+        TokenKind::Plus => write!(f, "+"),
+        TokenKind::Minus => write!(f, "-"),
+        TokenKind::Star => write!(f, "*"),
+        TokenKind::Slash => write!(f, "/"),
+        TokenKind::Percent => write!(f, "%"),
+        TokenKind::Comma => write!(f, ","),
+        TokenKind::Semi => write!(f, ";"),
+        TokenKind::Forall => write!(f, "forall"),
+        TokenKind::Let => write!(f, "let"),
+        TokenKind::Type => write!(f, "let"),
+        TokenKind::Val => write!(f, "val"),
         TokenKind::Open => write!(f, "open"),
       }
     }
@@ -200,6 +272,7 @@ mod lexing {
 /// Parsing module that will parse the tokens into an AST.
 mod parsing {
   use std::cell::Cell;
+  use std::sync::Arc;
 
   use chumsky::prelude::*;
 
@@ -336,16 +409,27 @@ mod parsing {
     Ok((token.clone(), at))
   }
 
+  /// Return recovery error.
+  fn recover(name: &str, _: Arc<miette::Report>) -> Expression {
+    Expression::Error(crate::src::Error {
+      message: format!("failed to parse {name}"),
+    })
+  }
+
   /// GRAMMAR: Parses a primary expression.
   fn primary(db: &dyn ZureDb, p: &mut Parser) -> Result<Term, InnerError> {
-    use TokenKind::*;
-
     let (token, at) = p.lookahead(0)?;
+
     Ok(Term::new(db, fix_span(at), match token.data {
       Number => expect(db, p, Number).map(|_| Expression::Int(str::parse(&token.text).unwrap()))?,
       String => todo!(),
       Symbol => todo!(),
       Open => todo!(),
+      _ => recover("primary", failwith(db, InnerError::UnexpectedToken {
+        at,
+        found: token.clone(),
+        expected: Number,
+      })),
     }))
   }
 

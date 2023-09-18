@@ -173,12 +173,18 @@ pub enum Implicitness {
   Implicit,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Error {
+  pub message: String,
+}
+
 /// Expression data type that implements polymorphism for expressions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
   Function(Function),
   Match(Match),
   Tuple(Tuple),
+  Error(Error),
   Raise(Raise),
   Text(String),
   Appl(Appl),
