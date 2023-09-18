@@ -108,8 +108,10 @@ pub struct ValDeclaration {
   pub type_repr: Term,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub enum Declaration {
+  #[default]
+  Error,
   Let(LetDeclaration),
   Val(ValDeclaration),
   Type(TypeDeclaration),
@@ -140,9 +142,9 @@ pub struct Parameter {
 #[salsa::tracked]
 pub struct TopLevel {
   #[id]
-  pub id: Identifier,
-  pub declaration: Declaration,
+  pub name: Option<Identifier>,
   pub span: Span,
+  pub declaration: Declaration,
 }
 
 /// Expression is the base of the language. It does contains the type

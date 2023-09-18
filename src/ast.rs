@@ -120,7 +120,7 @@ pub struct LetOpen {
 /// A variable binding in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LetBinding {
-  Variable(LetDeclaration),
+  LetDeclaration(LetDeclaration),
   Open(LetOpen),
 }
 

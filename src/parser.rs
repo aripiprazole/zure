@@ -34,8 +34,8 @@ pub enum InnerError {
   ///
   /// It's useful to debug the parser and the source code if you are an end-to-end
   /// user.
-  #[error("expected {expected}, found {found}")]
-  #[diagnostic(code(E001P), help("replace the text with {expected}"))]
+  #[error("expected {expected:?}, found {found}")]
+  #[diagnostic(code(E001P), help("replace the text with {expected:?}"))]
   UnexpectedToken {
     #[label("here")]
     at: SourceSpan,
@@ -44,7 +44,7 @@ pub enum InnerError {
     found: Token,
 
     /// The token that was expected.
-    expected: TokenKind,
+    expected: Vec<TokenKind>,
   },
 
   /// Publish the unexpected end of file error, it's like the parser expected
@@ -287,6 +287,7 @@ mod parsing {
   use super::*;
   use crate::error::failwith;
   use crate::src::Appl;
+  use crate::src::Declaration;
   use crate::src::Expression;
   use crate::src::Identifier;
   use crate::src::Let;
@@ -295,6 +296,7 @@ mod parsing {
   use crate::src::Parameter;
   use crate::src::Span;
   use crate::src::Term;
+  use crate::src::TopLevel;
   use crate::ZureDb;
 
   const MAX_FUEL: usize = 256;
@@ -443,7 +445,7 @@ mod parsing {
       failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected,
+        expected: vec![expected],
       });
     }
 
@@ -498,7 +500,7 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: Symbol,
+        expected: vec![Symbol],
       })),
     })
   }
@@ -535,7 +537,7 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: Number,
+        expected: vec![Number],
       })),
     }))
   }
@@ -556,9 +558,33 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: Number,
+        expected: vec![Number],
       })),
     }))
+  }
+
+  /// GRAMMAR: Parses a top level statement or declaration.
+  fn top_level(db: &dyn ZureDb, p: &mut Parser) -> Result<TopLevel, InnerError> {
+    let mut name: Option<Identifier> = None;
+    let (token, at) = p.lookahead(0)?;
+    let declaration = match token.data {
+      W_OPEN => todo!(),
+      W_LET if p.next()? => {
+        let LetBinding::LetDeclaration(let_declaration) = let_binding(db, p)? else {
+          panic!("cant parse let binding")
+        };
+
+        name = Some(let_declaration.name);
+        Declaration::Let(let_declaration)
+      }
+      _ => recover(failwith(db, UnexpectedToken {
+        at,
+        found: token.clone(),
+        expected: vec![W_LET, W_VAL, W_OPEN],
+      })),
+    };
+
+    Ok(TopLevel::new(db, name, finish(db, p, fix_span(at))?, declaration))
   }
 
   /// Run parser on the given input. If an error occurs, return the error with
@@ -566,6 +592,7 @@ mod parsing {
   pub fn run_parser(db: &dyn crate::ZureDb, file: File) -> miette::Result<Module> {
     let contents = file.contents(db);
     let tokens = lexing::run_lexer(file.contents(db)).unwrap();
+    top_level;
     todo!()
     // Ok(Module::new(db, file, imports, vec![]))
   }
