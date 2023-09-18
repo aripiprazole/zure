@@ -208,7 +208,9 @@ mod parsing {
   use super::lexing::TokenKind::*;
   use super::*;
   use crate::error::failwith;
+  use crate::src::Expression;
   use crate::src::Span;
+  use crate::src::Term;
   use crate::ZureDb;
 
   const MAX_FUEL: usize = 256;
@@ -234,13 +236,13 @@ mod parsing {
 
   impl<'src> Parser<'src> {
     #[inline]
-    fn peek(&mut self) -> Result<(&Token, SourceSpan), InnerError> {
+    fn peek(&mut self) -> Result<(Token, SourceSpan), InnerError> {
       self.lookahead(0)
     }
 
     /// Lookahead the next token. It does return a result
     /// that will be an [`Err`] if the file ends unexpectedly.
-    fn lookahead(&self, nth: usize) -> Result<(&Token, SourceSpan), InnerError> {
+    fn lookahead(&self, nth: usize) -> Result<(Token, SourceSpan), InnerError> {
       // Reports to the user when the file ends unexpectedly. Like if
       // the user forgot to close a parenthesis.
       if self.index >= self.tokens.len() {
@@ -252,7 +254,15 @@ mod parsing {
       self.consume_fuel()?;
 
       let (tok, span) = &self.tokens[self.index + nth];
-      Ok((tok, create_zure_span(*span)))
+      Ok((tok.clone(), create_zure_span(*span)))
+    }
+
+    /// Returns only the kind of the token
+    /// without the text.
+    #[inline]
+    fn nth(&self, nth: usize) -> Result<TokenKind, InnerError> {
+      let (tok, _) = self.lookahead(nth)?;
+      Ok(tok.data)
     }
 
     /// Bump the parser to the next token.
@@ -311,7 +321,7 @@ mod parsing {
     }
   }
 
-  fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) -> Result<(), InnerError> {
+  fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) -> Result<(Token, SourceSpan), InnerError> {
     let (token, at) = p.peek()?;
     if token.data == expected {
       p.advance()?;
@@ -323,7 +333,20 @@ mod parsing {
       });
     }
 
-    Ok(())
+    Ok((token.clone(), at))
+  }
+
+  /// GRAMMAR: Parses a primary expression.
+  fn primary(db: &dyn ZureDb, p: &mut Parser) -> Result<Term, InnerError> {
+    use TokenKind::*;
+
+    let (token, at) = p.lookahead(0)?;
+    Ok(Term::new(db, fix_span(at), match token.data {
+      Number => expect(db, p, Number).map(|_| Expression::Int(str::parse(&token.text).unwrap()))?,
+      String => todo!(),
+      Symbol => todo!(),
+      Open => todo!(),
+    }))
   }
 
   /// Run parser on the given input. If an error occurs, return the error with

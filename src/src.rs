@@ -148,8 +148,8 @@ pub struct TopLevel {
 /// representation of the expression, and the parameters of the expression.
 #[salsa::tracked]
 pub struct Term {
-  pub data: Expression,
   pub span: Span,
+  pub data: Expression,
 }
 
 /// A module opening in a let expression.
