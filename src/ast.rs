@@ -53,7 +53,7 @@ pub struct Variant {
 /// A variable declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LetDeclaration {
-  pub id: Identifier,
+  pub name: Identifier,
   pub parameters: Vec<Parameter>,
   pub value: Term,
 }

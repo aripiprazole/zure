@@ -128,11 +128,12 @@ mod lexing {
     Percent,
     Comma,
     Semi,
-    Forall,
-    Open,
-    Let,
-    Type,
-    Val,
+    W_FORALL,
+    W_OPEN,
+    W_LET,
+    W_TYPE,
+    W_VAL,
+    W_IN,
   }
 
   impl Display for TokenKind {
@@ -141,7 +142,7 @@ mod lexing {
         Self::Number => write!(f, "<number>"),
         Self::String => write!(f, "<string>"),
         Self::Symbol => write!(f, "<symbol>"),
-        Self::Open => write!(f, "open"),
+        Self::W_OPEN => write!(f, "open"),
         Self::FreeVariable => write!(f, "<free variable>"),
         Self::LeftBracket => write!(f, "["),
         Self::RightBracket => write!(f, "]"),
@@ -162,10 +163,12 @@ mod lexing {
         Self::Percent => write!(f, "%"),
         Self::Comma => write!(f, ","),
         Self::Semi => write!(f, ";"),
-        Self::Forall => write!(f, "forall"),
-        Self::Let => write!(f, "let"),
-        Self::Type => write!(f, "let"),
-        Self::Val => write!(f, "val"),
+
+        Self::W_FORALL => write!(f, "forall"),
+        Self::W_LET => write!(f, "let"),
+        Self::W_TYPE => write!(f, "let"),
+        Self::W_VAL => write!(f, "val"),
+        Self::W_IN => write!(f, "in"),
       }
     }
   }
@@ -202,11 +205,12 @@ mod lexing {
         TokenKind::Percent => write!(f, "%"),
         TokenKind::Comma => write!(f, ","),
         TokenKind::Semi => write!(f, ";"),
-        TokenKind::Forall => write!(f, "forall"),
-        TokenKind::Let => write!(f, "let"),
-        TokenKind::Type => write!(f, "let"),
-        TokenKind::Val => write!(f, "val"),
-        TokenKind::Open => write!(f, "open"),
+        TokenKind::W_FORALL => write!(f, "forall"),
+        TokenKind::W_LET => write!(f, "let"),
+        TokenKind::W_TYPE => write!(f, "let"),
+        TokenKind::W_VAL => write!(f, "val"),
+        TokenKind::W_OPEN => write!(f, "open"),
+        TokenKind::W_IN => write!(f, "in"),
       }
     }
   }
@@ -223,7 +227,7 @@ mod lexing {
   fn ident_lexer<'a>() -> impl Parser<'a, &'a str, Token, Failure<'a>> {
     use TokenKind::*;
     text::ident().map(|text| match text {
-      "open" => new_token(Open, text),
+      "open" => new_token(W_OPEN, text),
       _ => new_token(Symbol, text),
     })
   }
@@ -285,6 +289,10 @@ mod parsing {
   use crate::src::Appl;
   use crate::src::Expression;
   use crate::src::Identifier;
+  use crate::src::Let;
+  use crate::src::LetBinding;
+  use crate::src::LetDeclaration;
+  use crate::src::Parameter;
   use crate::src::Span;
   use crate::src::Term;
   use crate::ZureDb;
@@ -412,6 +420,15 @@ mod parsing {
         Err(_) => false,
       }
     }
+
+    fn eat(&mut self, tokens: &[TokenKind]) -> bool {
+      if self.at(tokens) {
+        self.advance().unwrap();
+        true
+      } else {
+        false
+      }
+    }
   }
 
   fn finish(db: &dyn ZureDb, p: &mut Parser, span: Span) -> Result<Span, InnerError> {
@@ -434,9 +451,55 @@ mod parsing {
   }
 
   /// Return recovery error.
-  fn recover(_: Arc<miette::Report>) -> Expression {
-    Expression::Error(crate::src::Error {
-      message: "failed to parse".to_string(),
+  fn recover<T: Default>(_: Arc<miette::Report>) -> T {
+    T::default()
+  }
+
+  /// GRAMMAR: Parameter
+  fn parameter(db: &dyn ZureDb, p: &mut Parser) -> Result<Parameter, InnerError> {
+    todo!()
+  }
+
+  /// GRAMMAR: Let binding
+  fn let_binding(db: &dyn ZureDb, p: &mut Parser) -> Result<LetBinding, InnerError> {
+    let (token, at) = p.lookahead(0)?;
+    let span = fix_span(at);
+
+    Ok(match token.data {
+      Symbol => {
+        // <symbol> <parameter>* ":" <type_repr> ":=" <term>
+        //
+        // The following grammar parses:
+        let name = Identifier::new(db, token.text, None, span.clone());
+
+        // <parameter>*
+        let mut parameters = vec![];
+        while p.at(&[Symbol]) {
+          parameters.push(parameter(db, p)?);
+        }
+
+        // ":" <type_repr>
+        let type_repr = if p.eat(&[Colon]) { Some(term(db, p)?) } else { None };
+
+        // ":=" <term>
+        let value = if p.eat(&[ColonEqual]) {
+          term(db, p)?
+        } else {
+          panic!("cant parse value")
+        };
+
+        LetBinding::LetDeclaration(LetDeclaration {
+          name,
+          parameters,
+          type_repr,
+          value,
+        })
+      }
+      _ => recover(failwith(db, UnexpectedToken {
+        at,
+        found: token.clone(),
+        expected: Symbol,
+      })),
     })
   }
 
@@ -446,6 +509,13 @@ mod parsing {
     let span = fix_span(at);
 
     Ok(Term::new(db, span.clone(), match token.data {
+      W_LET if p.next()? => {
+        let binding = let_binding(db, p)?;
+        expect(db, p, W_IN)?;
+        let next = term(db, p)?;
+
+        Expression::Let(Let { binding, next })
+      }
       _ if PRIMARY_FIRST.contains(&token.data) => {
         let callee = primary(db, p)?;
         let mut spine = vec![];

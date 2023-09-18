@@ -85,8 +85,9 @@ pub struct Variant {
 /// A variable declaration in a let expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LetDeclaration {
-  pub id: Identifier,
+  pub name: Identifier,
   pub parameters: Vec<Parameter>,
+  pub type_repr: Option<Term>,
   pub value: Term,
 }
 
@@ -160,10 +161,12 @@ pub struct LetOpen {
 }
 
 /// A variable binding in a let expression.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub enum LetBinding {
-  Variable(LetDeclaration),
+  LetDeclaration(LetDeclaration),
   Open(LetOpen),
+  #[default]
+  Error,
 }
 
 /// The implicitness of a parameter.
@@ -173,18 +176,15 @@ pub enum Implicitness {
   Implicit,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Error {
-  pub message: String,
-}
-
 /// Expression data type that implements polymorphism for expressions.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, PartialEq, Eq)]
 pub enum Expression {
+  #[default]
+  Error,
+
   Function(Function),
   Match(Match),
   Tuple(Tuple),
-  Error(Error),
   Raise(Raise),
   Group(Term),
   Text(String),
