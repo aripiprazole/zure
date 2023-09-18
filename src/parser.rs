@@ -22,6 +22,10 @@ pub struct Failure(InnerError);
 
 /// Inner specified error for the parser. It's useful
 /// to debug the parser.
+///
+/// If a function returns `Result<..., InnerError>` it should report an unrecoverable
+/// error, it's a result because we can't recover, so it should stop the chain of the
+/// parser.
 #[derive(miette::Diagnostic, thiserror::Error, Debug, Clone)]
 #[diagnostic(url(docsrs))]
 pub enum InnerError {
@@ -41,6 +45,30 @@ pub enum InnerError {
 
     /// The token that was expected.
     expected: TokenKind,
+  },
+
+  /// Publish the unexpected end of file error, it's like the parser expected
+  /// `:=` but found `EOF`, and it reports the error to the end-to-end user.
+  ///
+  /// The file ended unexpectedly.
+  #[error("unexpectedly found the end of file")]
+  #[diagnostic(code(E002P), help("write more code to the file"))]
+  Eof {
+    #[label("here")]
+    at: SourceSpan,
+  },
+
+  /// Fuel of the parser ended, so we can't continue parsing, it's just a
+  /// debug error.
+  ///
+  /// It's annotated by `cfg(debug_assertions)` because it's only useful
+  /// when we are debugging the parser.
+  #[cfg(debug_assertions)]
+  #[error("fuel exhausted")]
+  #[diagnostic(code(E000P))]
+  OutOfFuel {
+    #[label("here")]
+    at: SourceSpan,
   },
 }
 
@@ -179,7 +207,7 @@ mod parsing {
   use super::lexing::TokenKind;
   use super::lexing::TokenKind::*;
   use super::*;
-  use crate::error::publish_failure;
+  use crate::error::failwith;
   use crate::src::Span;
   use crate::ZureDb;
 
@@ -187,6 +215,8 @@ mod parsing {
     src: &'src str,
     tokens: &'src [(Token, SimpleSpan)],
     index: usize,
+
+    #[cfg(debug_assertions)]
     fuel: Cell<usize>,
   }
 
@@ -201,27 +231,67 @@ mod parsing {
   }
 
   impl<'src> Parser<'src> {
-    fn peek(&mut self) -> (&Token, SourceSpan) {
+    #[inline]
+    fn peek(&mut self) -> Result<(&Token, SourceSpan), InnerError> {
+      self.lookahead(0)
+    }
+
+    /// Lookahead the next token. It does return a result
+    /// that will be an [`Err`] if the file ends unexpectedly.
+    fn lookahead(&self, nth: usize) -> Result<(&Token, SourceSpan), InnerError> {
+      // Reports to the user when the file ends unexpectedly. Like if
+      // the user forgot to close a parenthesis.
       if self.index >= self.tokens.len() {
-        panic!();
+        return Err(InnerError::Eof {
+          at: create_zure_span(SimpleSpan::new(self.src.len(), self.src.len())),
+        });
       }
 
-      let (tok, span) = &self.tokens[self.index];
-      (tok, create_zure_span(*span))
+      self.consume_fuel()?;
+
+      let (tok, span) = &self.tokens[self.index + nth];
+      Ok((tok, create_zure_span(*span)))
+    }
+
+
+    /// Consumes fuel in production code, or just return
+    /// if we are in debug mode.
+    #[cfg(not(debug_assertions))]
+    #[inline(always)]
+    fn consume_fuel(&self) -> Result<(), InnerError> {
+      Ok(())
+    }
+
+    /// Consumes fuel in debug code, returning an error if
+    /// the fuel is exhausted.
+    #[cfg(debug_assertions)]
+    fn consume_fuel(&self) -> Result<(), InnerError> {
+      #[cfg(debug_assertions)]
+      if self.fuel.get() == 0 {
+        return Err(InnerError::OutOfFuel {
+          at: create_zure_span(SimpleSpan::new(self.src.len(), self.src.len())),
+        });
+      }
+
+      self.fuel.set(self.fuel.get() - 1);
+
+      Ok(())
     }
   }
 
-  fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) {
-    let (token, at) = p.peek();
+  fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) -> Result<(), InnerError> {
+    let (token, at) = p.peek()?;
     if token.data == expected {
       // p.bump();
     } else {
-      publish_failure(db, InnerError::UnexpectedToken {
+      failwith(db, InnerError::UnexpectedToken {
         at,
         found: token.clone(),
         expected,
       });
     }
+
+    Ok(())
   }
 
   /// Run parser on the given input. If an error occurs, return the error with

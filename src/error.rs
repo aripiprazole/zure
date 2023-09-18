@@ -10,6 +10,6 @@ use crate::ZureDb;
 pub struct Failure(Arc<miette::Report>);
 
 /// Publishes an error to the database.
-pub fn publish_failure<I: miette::Diagnostic + Sync + Send + 'static>(db: &dyn ZureDb, error: I) {
+pub fn failwith<I: miette::Diagnostic + Sync + Send + 'static>(db: &dyn ZureDb, error: I) {
   Failure::push(db, Arc::new(miette::Report::new(error)))
 }
