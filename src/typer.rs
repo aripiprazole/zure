@@ -484,6 +484,7 @@ pub fn resolve(db: &dyn ZureDb, ctx: &Ctx, value: crate::src::Term) -> Term {
         ),
       })
     }
+    Error(_) => todo!(),
   })
 }
 

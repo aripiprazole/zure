@@ -1,7 +1,6 @@
-use std::path::PathBuf;
-
 use crate::src::Identifier;
 use crate::src::Implicitness;
+use crate::src::ModuleId;
 use crate::src::Span;
 
 /// Module file. It does tracks the imports, and the path of the file, for
@@ -17,17 +16,6 @@ pub struct Module {
 
   #[return_ref]
   pub top_levels: Vec<TopLevel>,
-}
-
-/// The identifier of a module. It does contains the path of the module, and
-/// the name of the module.
-#[salsa::input]
-pub struct ModuleId {
-  #[return_ref]
-  pub text: String,
-
-  #[return_ref]
-  pub path: PathBuf,
 }
 
 /// File is a source file. It does contains the source code of the file, and

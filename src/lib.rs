@@ -24,7 +24,6 @@ pub struct Jar(
   src::Variant,
   src::Parameter,
   ast::Module,
-  ast::ModuleId,
   ast::File,
   ast::TopLevel,
   ast::Term,

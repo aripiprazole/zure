@@ -283,6 +283,7 @@ mod parsing {
   use super::*;
   use crate::error::failwith;
   use crate::src::Expression;
+  use crate::src::Identifier;
   use crate::src::Span;
   use crate::src::Term;
   use crate::ZureDb;
@@ -423,9 +424,8 @@ mod parsing {
 
     Ok(Term::new(db, fix_span(at), match token.data {
       Number => Expression::Int(str::parse(&token.text).unwrap()),
-      String => todo!(),
-      Symbol => todo!(),
-      Open => todo!(),
+      String => Expression::Text(token.text[1..token.text.len() - 1].to_string()),
+      Symbol => Expression::Var(Identifier::new(db, token.text, None, fix_span(at))),
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
