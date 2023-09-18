@@ -129,29 +129,29 @@ mod lexing {
   /// to tokenize the input and parse it.
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum TokenKind {
-    Number,
-    String,
-    Symbol,
-    FreeVariable,
-    LeftBracket,
-    RightBracket,
-    LeftParen,
-    RightParen,
-    LeftBrace,
-    RightBrace,
-    LeftArrow,
-    RightArrow,
-    Equal,
-    Colon,
-    ColonEqual,
-    Bar,
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Percent,
-    Comma,
-    Semi,
+    T_Number,
+    T_String,
+    T_Identifier,
+    T_FreeVariable,
+    T_LeftBracket,
+    T_TRightBracket,
+    T_LeftParen,
+    T_RightParen,
+    T_LeftBrace,
+    T_RightBrace,
+    T_LeftArrow,
+    T_RightArrow,
+    T_Equal,
+    T_Colon,
+    T_ColonEqual,
+    T_Bar,
+    T_Plus,
+    T_Minus,
+    T_Star,
+    T_Slash,
+    T_Percent,
+    T_Comma,
+    T_Semi,
     W_FORALL,
     W_OPEN,
     W_LET,
@@ -163,30 +163,30 @@ mod lexing {
   impl Display for TokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
       match self {
-        Self::Number => write!(f, "<number>"),
-        Self::String => write!(f, "<string>"),
-        Self::Symbol => write!(f, "<symbol>"),
+        Self::T_Number => write!(f, "<number>"),
+        Self::T_String => write!(f, "<string>"),
+        Self::T_Identifier => write!(f, "<symbol>"),
         Self::W_OPEN => write!(f, "open"),
-        Self::FreeVariable => write!(f, "<free variable>"),
-        Self::LeftBracket => write!(f, "["),
-        Self::RightBracket => write!(f, "]"),
-        Self::LeftParen => write!(f, "("),
-        Self::RightParen => write!(f, ")"),
-        Self::LeftBrace => write!(f, "{{"),
-        Self::RightBrace => write!(f, "}}"),
-        Self::LeftArrow => write!(f, "->"),
-        Self::RightArrow => write!(f, "<-"),
-        Self::Equal => write!(f, "="),
-        Self::Colon => write!(f, ":"),
-        Self::ColonEqual => write!(f, ":="),
-        Self::Bar => write!(f, "|"),
-        Self::Plus => write!(f, "+"),
-        Self::Minus => write!(f, "-"),
-        Self::Star => write!(f, "*"),
-        Self::Slash => write!(f, "/"),
-        Self::Percent => write!(f, "%"),
-        Self::Comma => write!(f, ","),
-        Self::Semi => write!(f, ";"),
+        Self::T_FreeVariable => write!(f, "<free variable>"),
+        Self::T_LeftBracket => write!(f, "["),
+        Self::T_TRightBracket => write!(f, "]"),
+        Self::T_LeftParen => write!(f, "("),
+        Self::T_RightParen => write!(f, ")"),
+        Self::T_LeftBrace => write!(f, "{{"),
+        Self::T_RightBrace => write!(f, "}}"),
+        Self::T_LeftArrow => write!(f, "->"),
+        Self::T_RightArrow => write!(f, "<-"),
+        Self::T_Equal => write!(f, "="),
+        Self::T_Colon => write!(f, ":"),
+        Self::T_ColonEqual => write!(f, ":="),
+        Self::T_Bar => write!(f, "|"),
+        Self::T_Plus => write!(f, "+"),
+        Self::T_Minus => write!(f, "-"),
+        Self::T_Star => write!(f, "*"),
+        Self::T_Slash => write!(f, "/"),
+        Self::T_Percent => write!(f, "%"),
+        Self::T_Comma => write!(f, ","),
+        Self::T_Semi => write!(f, ";"),
 
         Self::W_FORALL => write!(f, "forall"),
         Self::W_LET => write!(f, "let"),
@@ -206,29 +206,29 @@ mod lexing {
   impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
       match self.data {
-        TokenKind::Number => write!(f, "{}", self.text),
-        TokenKind::String => write!(f, "\"{}\"", self.text),
-        TokenKind::Symbol => write!(f, "{}", self.text),
-        TokenKind::FreeVariable => write!(f, "'{}", self.text),
-        TokenKind::LeftBracket => write!(f, "["),
-        TokenKind::RightBracket => write!(f, "]"),
-        TokenKind::LeftParen => write!(f, "("),
-        TokenKind::RightParen => write!(f, ")"),
-        TokenKind::LeftBrace => write!(f, "{{"),
-        TokenKind::RightBrace => write!(f, "}}"),
-        TokenKind::LeftArrow => write!(f, "->"),
-        TokenKind::RightArrow => write!(f, "<-"),
-        TokenKind::Equal => write!(f, "="),
-        TokenKind::Colon => write!(f, ":"),
-        TokenKind::ColonEqual => write!(f, ":="),
-        TokenKind::Bar => write!(f, "|"),
-        TokenKind::Plus => write!(f, "+"),
-        TokenKind::Minus => write!(f, "-"),
-        TokenKind::Star => write!(f, "*"),
-        TokenKind::Slash => write!(f, "/"),
-        TokenKind::Percent => write!(f, "%"),
-        TokenKind::Comma => write!(f, ","),
-        TokenKind::Semi => write!(f, ";"),
+        TokenKind::T_Number => write!(f, "{}", self.text),
+        TokenKind::T_String => write!(f, "\"{}\"", self.text),
+        TokenKind::T_Identifier => write!(f, "{}", self.text),
+        TokenKind::T_FreeVariable => write!(f, "'{}", self.text),
+        TokenKind::T_LeftBracket => write!(f, "["),
+        TokenKind::T_TRightBracket => write!(f, "]"),
+        TokenKind::T_LeftParen => write!(f, "("),
+        TokenKind::T_RightParen => write!(f, ")"),
+        TokenKind::T_LeftBrace => write!(f, "{{"),
+        TokenKind::T_RightBrace => write!(f, "}}"),
+        TokenKind::T_LeftArrow => write!(f, "->"),
+        TokenKind::T_RightArrow => write!(f, "<-"),
+        TokenKind::T_Equal => write!(f, "="),
+        TokenKind::T_Colon => write!(f, ":"),
+        TokenKind::T_ColonEqual => write!(f, ":="),
+        TokenKind::T_Bar => write!(f, "|"),
+        TokenKind::T_Plus => write!(f, "+"),
+        TokenKind::T_Minus => write!(f, "-"),
+        TokenKind::T_Star => write!(f, "*"),
+        TokenKind::T_Slash => write!(f, "/"),
+        TokenKind::T_Percent => write!(f, "%"),
+        TokenKind::T_Comma => write!(f, ","),
+        TokenKind::T_Semi => write!(f, ";"),
         TokenKind::W_FORALL => write!(f, "forall"),
         TokenKind::W_LET => write!(f, "let"),
         TokenKind::W_TYPE => write!(f, "let"),
@@ -252,7 +252,7 @@ mod lexing {
     use TokenKind::*;
     text::ident().map(|text| match text {
       "open" => new_token(W_OPEN, text),
-      _ => new_token(Symbol, text),
+      _ => new_token(T_Identifier, text),
     })
   }
 
@@ -263,13 +263,13 @@ mod lexing {
     let num = text::int(10)
       .then(just('.').then(text::digits(10)).or_not())
       .slice()
-      .map(|text: &str| new_token(Number, text))
+      .map(|text: &str| new_token(T_Number, text))
       .labelled("number");
 
     let string = just('"')
       .ignore_then(none_of('"').repeated())
       .then_ignore(just('"'))
-      .map_slice(|text: &str| new_token(String, text))
+      .map_slice(|text: &str| new_token(T_String, text))
       .labelled("string literal");
 
     let comment = just("//")
@@ -325,7 +325,7 @@ mod parsing {
 
   const MAX_FUEL: usize = 256;
 
-  const PRIMARY_FIRST: &[TokenKind] = &[Number, String, Symbol, LeftParen];
+  const PRIMARY_FIRST: &[TokenKind] = &[T_Number, T_String, T_Identifier, T_LeftParen];
 
   pub struct Parser<'src> {
     src: &'src str,
@@ -471,15 +471,15 @@ mod parsing {
     todo!()
   }
 
-  fn expect(db: &dyn ZureDb, p: &mut Parser, expected: TokenKind) -> Result<(Token, SourceSpan), InnerError> {
+  fn expect(db: &dyn ZureDb, p: &mut Parser, kind: TokenKind) -> Result<(Token, SourceSpan), InnerError> {
     let (token, at) = p.peek()?;
-    if token.data == expected {
+    if token.data == kind {
       p.advance()?;
     } else {
       failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![expected],
+        expected: vec![kind],
       });
     }
 
@@ -502,7 +502,7 @@ mod parsing {
     let span = fix_span(at);
 
     Ok(match token.data {
-      Symbol => {
+      T_Identifier => {
         // <symbol> <parameter>* ":" <type_repr> ":=" <term>
         //
         // The following grammar parses:
@@ -510,15 +510,15 @@ mod parsing {
 
         // <parameter>*
         let mut parameters = vec![];
-        while p.at(&[Symbol]) {
+        while p.at(&[T_Identifier]) {
           parameters.push(parameter(db, p)?);
         }
 
         // ":" <type_repr>
-        let type_repr = if p.eat(&[Colon]) { Some(term(db, p)?) } else { None };
+        let type_repr = if p.eat(&[T_Colon]) { Some(term(db, p)?) } else { None };
 
         // ":=" <term>
-        let value = if p.eat(&[ColonEqual]) {
+        let value = if p.eat(&[T_ColonEqual]) {
           term(db, p)?
         } else {
           panic!("cant parse value")
@@ -534,7 +534,7 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![Symbol],
+        expected: vec![T_Identifier],
       })),
     })
   }
@@ -571,7 +571,7 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![Number],
+        expected: vec![T_Number],
       })),
     }))
   }
@@ -581,18 +581,18 @@ mod parsing {
     let (token, at) = p.lookahead(0)?;
 
     Ok(Term::new(db, fix_span(at), match token.data {
-      Number => Expression::Int(str::parse(&token.text).unwrap()),
-      String => Expression::Text(token.text[1..token.text.len() - 1].to_string()),
-      Symbol => Expression::Var(Identifier::new(db, token.text, None, fix_span(at))),
-      LeftParen if p.next()? => {
+      T_Number => Expression::Int(str::parse(&token.text).unwrap()),
+      T_String => Expression::Text(token.text[1..token.text.len() - 1].to_string()),
+      T_Identifier => Expression::Var(Identifier::new(db, token.text, None, fix_span(at))),
+      T_LeftParen if p.next()? => {
         let expr = term(db, p)?;
-        expect(db, p, RightParen)?;
+        expect(db, p, T_RightParen)?;
         Expression::Group(expr)
       }
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![Number],
+        expected: vec![T_Number],
       })),
     }))
   }
@@ -628,7 +628,7 @@ mod parsing {
     let tokens = lexing::run_lexer(file.contents(db)).unwrap();
     let mut p = Parser::new(contents, &tokens);
     let mut top_levels = vec![];
-    while p.at(&[W_LET, W_VAL, W_OPEN]) {
+    while p.at(&[W_LET, W_VAL, W_OPEN, W_TYPE]) {
       top_levels.push(top_level(db, &mut p)?);
     }
 
