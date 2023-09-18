@@ -279,6 +279,7 @@ mod parsing {
   use super::lexing::Token;
   use super::lexing::TokenKind;
   use super::lexing::TokenKind::*;
+  use super::InnerError::*;
   use super::*;
   use crate::error::failwith;
   use crate::src::Expression;
@@ -399,7 +400,7 @@ mod parsing {
     if token.data == expected {
       p.advance()?;
     } else {
-      failwith(db, InnerError::UnexpectedToken {
+      failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
         expected,
@@ -410,9 +411,9 @@ mod parsing {
   }
 
   /// Return recovery error.
-  fn recover(name: &str, _: Arc<miette::Report>) -> Expression {
+  fn recover(_: Arc<miette::Report>) -> Expression {
     Expression::Error(crate::src::Error {
-      message: format!("failed to parse {name}"),
+      message: format!("failed to parse"),
     })
   }
 
@@ -425,7 +426,7 @@ mod parsing {
       String => todo!(),
       Symbol => todo!(),
       Open => todo!(),
-      _ => recover("primary", failwith(db, InnerError::UnexpectedToken {
+      _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
         expected: Number,
