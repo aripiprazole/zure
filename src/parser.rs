@@ -599,17 +599,15 @@ mod parsing {
 
   /// GRAMMAR: Parses a top level statement or declaration.
   fn top_level(db: &dyn ZureDb, p: &mut Parser) -> Result<TopLevel, InnerError> {
-    let mut name: Option<Identifier> = None;
     let (token, at) = p.lookahead(0)?;
     let declaration = match token.data {
       W_OPEN => todo!(),
       W_LET if p.next()? => {
-        let LetBinding::LetDeclaration(ledeclaration) = lebinding(db, p)? else {
+        let LetBinding::LetDeclaration(let_declaration) = lebinding(db, p)? else {
           panic!("cant parse let binding")
         };
 
-        name = Some(ledeclaration.name);
-        Declaration::Let(ledeclaration)
+        Declaration::Let(let_declaration)
       }
       _ => recover(failwith(db, UnexpectedToken {
         at,
@@ -618,7 +616,7 @@ mod parsing {
       })),
     };
 
-    Ok(TopLevel::new(db, name, finish(db, p, fix_span(at))?, declaration))
+    Ok(TopLevel::new(db, finish(db, p, fix_span(at))?, declaration))
   }
 
   /// Run parser on the given input. If an error occurs, return the error with

@@ -141,8 +141,6 @@ pub struct Parameter {
 /// thing in the code, like a function, or a type.
 #[salsa::tracked]
 pub struct TopLevel {
-  #[id]
-  pub name: Option<Identifier>,
   pub span: Span,
   pub declaration: Declaration,
 }
