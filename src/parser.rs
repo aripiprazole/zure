@@ -129,29 +129,29 @@ mod lexing {
   /// to tokenize the input and parse it.
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum TokenKind {
-    T_Number,
-    T_String,
-    T_Identifier,
-    T_FreeVariable,
-    T_LeftBracket,
-    T_TRightBracket,
-    T_LeftParen,
-    T_RightParen,
-    T_LeftBrace,
-    T_RightBrace,
-    T_LeftArrow,
-    T_RightArrow,
-    T_Equal,
-    T_Colon,
-    T_ColonEqual,
-    T_Bar,
-    T_Plus,
-    T_Minus,
-    T_Star,
-    T_Slash,
-    T_Percent,
-    T_Comma,
-    T_Semi,
+    Number,
+    String,
+    Identifier,
+    FreeVariable,
+    LeftBracket,
+    TRightBracket,
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    LeftArrow,
+    RightArrow,
+    Equal,
+    Colon,
+    ColonEqual,
+    Bar,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Comma,
+    Semi,
     W_FORALL,
     W_OPEN,
     W_LET,
@@ -163,30 +163,30 @@ mod lexing {
   impl Display for TokenKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
       match self {
-        Self::T_Number => write!(f, "<number>"),
-        Self::T_String => write!(f, "<string>"),
-        Self::T_Identifier => write!(f, "<symbol>"),
+        Self::Number => write!(f, "<number>"),
+        Self::String => write!(f, "<string>"),
+        Self::Identifier => write!(f, "<symbol>"),
         Self::W_OPEN => write!(f, "open"),
-        Self::T_FreeVariable => write!(f, "<free variable>"),
-        Self::T_LeftBracket => write!(f, "["),
-        Self::T_TRightBracket => write!(f, "]"),
-        Self::T_LeftParen => write!(f, "("),
-        Self::T_RightParen => write!(f, ")"),
-        Self::T_LeftBrace => write!(f, "{{"),
-        Self::T_RightBrace => write!(f, "}}"),
-        Self::T_LeftArrow => write!(f, "->"),
-        Self::T_RightArrow => write!(f, "<-"),
-        Self::T_Equal => write!(f, "="),
-        Self::T_Colon => write!(f, ":"),
-        Self::T_ColonEqual => write!(f, ":="),
-        Self::T_Bar => write!(f, "|"),
-        Self::T_Plus => write!(f, "+"),
-        Self::T_Minus => write!(f, "-"),
-        Self::T_Star => write!(f, "*"),
-        Self::T_Slash => write!(f, "/"),
-        Self::T_Percent => write!(f, "%"),
-        Self::T_Comma => write!(f, ","),
-        Self::T_Semi => write!(f, ";"),
+        Self::FreeVariable => write!(f, "<free variable>"),
+        Self::LeftBracket => write!(f, "["),
+        Self::TRightBracket => write!(f, "]"),
+        Self::LeftParen => write!(f, "("),
+        Self::RightParen => write!(f, ")"),
+        Self::LeftBrace => write!(f, "{{"),
+        Self::RightBrace => write!(f, "}}"),
+        Self::LeftArrow => write!(f, "->"),
+        Self::RightArrow => write!(f, "<-"),
+        Self::Equal => write!(f, "="),
+        Self::Colon => write!(f, ":"),
+        Self::ColonEqual => write!(f, ":="),
+        Self::Bar => write!(f, "|"),
+        Self::Plus => write!(f, "+"),
+        Self::Minus => write!(f, "-"),
+        Self::Star => write!(f, "*"),
+        Self::Slash => write!(f, "/"),
+        Self::Percent => write!(f, "%"),
+        Self::Comma => write!(f, ","),
+        Self::Semi => write!(f, ";"),
 
         Self::W_FORALL => write!(f, "forall"),
         Self::W_LET => write!(f, "let"),
@@ -206,29 +206,29 @@ mod lexing {
   impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
       match self.data {
-        TokenKind::T_Number => write!(f, "{}", self.text),
-        TokenKind::T_String => write!(f, "\"{}\"", self.text),
-        TokenKind::T_Identifier => write!(f, "{}", self.text),
-        TokenKind::T_FreeVariable => write!(f, "'{}", self.text),
-        TokenKind::T_LeftBracket => write!(f, "["),
-        TokenKind::T_TRightBracket => write!(f, "]"),
-        TokenKind::T_LeftParen => write!(f, "("),
-        TokenKind::T_RightParen => write!(f, ")"),
-        TokenKind::T_LeftBrace => write!(f, "{{"),
-        TokenKind::T_RightBrace => write!(f, "}}"),
-        TokenKind::T_LeftArrow => write!(f, "->"),
-        TokenKind::T_RightArrow => write!(f, "<-"),
-        TokenKind::T_Equal => write!(f, "="),
-        TokenKind::T_Colon => write!(f, ":"),
-        TokenKind::T_ColonEqual => write!(f, ":="),
-        TokenKind::T_Bar => write!(f, "|"),
-        TokenKind::T_Plus => write!(f, "+"),
-        TokenKind::T_Minus => write!(f, "-"),
-        TokenKind::T_Star => write!(f, "*"),
-        TokenKind::T_Slash => write!(f, "/"),
-        TokenKind::T_Percent => write!(f, "%"),
-        TokenKind::T_Comma => write!(f, ","),
-        TokenKind::T_Semi => write!(f, ";"),
+        TokenKind::Number => write!(f, "{}", self.text),
+        TokenKind::String => write!(f, "\"{}\"", self.text),
+        TokenKind::Identifier => write!(f, "{}", self.text),
+        TokenKind::FreeVariable => write!(f, "'{}", self.text),
+        TokenKind::LeftBracket => write!(f, "["),
+        TokenKind::TRightBracket => write!(f, "]"),
+        TokenKind::LeftParen => write!(f, "("),
+        TokenKind::RightParen => write!(f, ")"),
+        TokenKind::LeftBrace => write!(f, "{{"),
+        TokenKind::RightBrace => write!(f, "}}"),
+        TokenKind::LeftArrow => write!(f, "->"),
+        TokenKind::RightArrow => write!(f, "<-"),
+        TokenKind::Equal => write!(f, "="),
+        TokenKind::Colon => write!(f, ":"),
+        TokenKind::ColonEqual => write!(f, ":="),
+        TokenKind::Bar => write!(f, "|"),
+        TokenKind::Plus => write!(f, "+"),
+        TokenKind::Minus => write!(f, "-"),
+        TokenKind::Star => write!(f, "*"),
+        TokenKind::Slash => write!(f, "/"),
+        TokenKind::Percent => write!(f, "%"),
+        TokenKind::Comma => write!(f, ","),
+        TokenKind::Semi => write!(f, ";"),
         TokenKind::W_FORALL => write!(f, "forall"),
         TokenKind::W_LET => write!(f, "let"),
         TokenKind::W_TYPE => write!(f, "let"),
@@ -248,11 +248,11 @@ mod lexing {
   }
 
   /// Identification lexer parser combinator
-  fn ident_lexer<'a>() -> impl Parser<'a, &'a str, Token, Failure<'a>> {
+  fn idenlexer<'a>() -> impl Parser<'a, &'a str, Token, Failure<'a>> {
     use TokenKind::*;
     text::ident().map(|text| match text {
       "open" => new_token(W_OPEN, text),
-      _ => new_token(T_Identifier, text),
+      _ => new_token(Identifier, text),
     })
   }
 
@@ -263,13 +263,13 @@ mod lexing {
     let num = text::int(10)
       .then(just('.').then(text::digits(10)).or_not())
       .slice()
-      .map(|text: &str| new_token(T_Number, text))
+      .map(|text: &str| new_token(Number, text))
       .labelled("number");
 
     let string = just('"')
       .ignore_then(none_of('"').repeated())
       .then_ignore(just('"'))
-      .map_slice(|text: &str| new_token(T_String, text))
+      .map_slice(|text: &str| new_token(String, text))
       .labelled("string literal");
 
     let comment = just("//")
@@ -277,7 +277,7 @@ mod lexing {
       .padded()
       .labelled("comment");
 
-    let token = num.or(string).or(ident_lexer());
+    let token = num.or(string).or(idenlexer());
 
     // If we encounter an error, skip and attempt to lex the next character as a token instead
     token
@@ -325,7 +325,7 @@ mod parsing {
 
   const MAX_FUEL: usize = 256;
 
-  const PRIMARY_FIRST: &[TokenKind] = &[T_Number, T_String, T_Identifier, T_LeftParen];
+  const PRIMARY_FIRST: &[TokenKind] = &[Number, String, Identifier, LeftParen];
 
   pub struct Parser<'src> {
     src: &'src str,
@@ -497,12 +497,12 @@ mod parsing {
   }
 
   /// GRAMMAR: Let binding
-  fn let_binding(db: &dyn ZureDb, p: &mut Parser) -> Result<LetBinding, InnerError> {
+  fn lebinding(db: &dyn ZureDb, p: &mut Parser) -> Result<LetBinding, InnerError> {
     let (token, at) = p.lookahead(0)?;
     let span = fix_span(at);
 
     Ok(match token.data {
-      T_Identifier => {
+      Identifier => {
         // <symbol> <parameter>* ":" <type_repr> ":=" <term>
         //
         // The following grammar parses:
@@ -510,15 +510,15 @@ mod parsing {
 
         // <parameter>*
         let mut parameters = vec![];
-        while p.at(&[T_Identifier]) {
+        while p.at(&[Identifier]) {
           parameters.push(parameter(db, p)?);
         }
 
         // ":" <type_repr>
-        let type_repr = if p.eat(&[T_Colon]) { Some(term(db, p)?) } else { None };
+        let type_repr = if p.eat(&[Colon]) { Some(term(db, p)?) } else { None };
 
         // ":=" <term>
-        let value = if p.eat(&[T_ColonEqual]) {
+        let value = if p.eat(&[ColonEqual]) {
           term(db, p)?
         } else {
           panic!("cant parse value")
@@ -534,7 +534,7 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![T_Identifier],
+        expected: vec![Identifier],
       })),
     })
   }
@@ -546,7 +546,7 @@ mod parsing {
 
     Ok(Term::new(db, span.clone(), match token.data {
       W_LET if p.next()? => {
-        let binding = let_binding(db, p)?;
+        let binding = lebinding(db, p)?;
         expect(db, p, W_IN)?;
         let next = term(db, p)?;
 
@@ -571,7 +571,7 @@ mod parsing {
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![T_Number],
+        expected: vec![Number],
       })),
     }))
   }
@@ -581,18 +581,18 @@ mod parsing {
     let (token, at) = p.lookahead(0)?;
 
     Ok(Term::new(db, fix_span(at), match token.data {
-      T_Number => Expression::Int(str::parse(&token.text).unwrap()),
-      T_String => Expression::Text(token.text[1..token.text.len() - 1].to_string()),
-      T_Identifier => Expression::Var(Identifier::new(db, token.text, None, fix_span(at))),
-      T_LeftParen if p.next()? => {
+      TokenKind::Number => Expression::Int(str::parse(&token.text).unwrap()),
+      TokenKind::String => Expression::Text(token.text[1..token.text.len() - 1].to_string()),
+      TokenKind::Identifier => Expression::Var(Identifier::new(db, token.text, None, fix_span(at))),
+      TokenKind::LeftParen if p.next()? => {
         let expr = term(db, p)?;
-        expect(db, p, T_RightParen)?;
+        expect(db, p, RightParen)?;
         Expression::Group(expr)
       }
       _ => recover(failwith(db, UnexpectedToken {
         at,
         found: token.clone(),
-        expected: vec![T_Number],
+        expected: vec![Number],
       })),
     }))
   }
@@ -604,12 +604,12 @@ mod parsing {
     let declaration = match token.data {
       W_OPEN => todo!(),
       W_LET if p.next()? => {
-        let LetBinding::LetDeclaration(let_declaration) = let_binding(db, p)? else {
+        let LetBinding::LetDeclaration(ledeclaration) = lebinding(db, p)? else {
           panic!("cant parse let binding")
         };
 
-        name = Some(let_declaration.name);
-        Declaration::Let(let_declaration)
+        name = Some(ledeclaration.name);
+        Declaration::Let(ledeclaration)
       }
       _ => recover(failwith(db, UnexpectedToken {
         at,
